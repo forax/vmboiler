@@ -76,8 +76,8 @@ public class Generator {
     writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "Fn", null, "java/lang/Object", null);
     ConstantPoolPatch constantPoolPatch = new ConstantPoolPatch(writer);
     
-    String desc = Arrays.stream(parameterTypes).map(type -> type.asmType().getDescriptor()).collect(Collectors.joining("", "(", ")"))
-        + returnType.asmType().getDescriptor();
+    String desc = Arrays.stream(parameterTypes).map(Type::vmType).collect(Collectors.joining("", "(", ")"))
+        + returnType.vmType();
     MethodVisitor mv = writer.visitMethod(ACC_PUBLIC|ACC_STATIC, name, desc, null, null);
     CodeGen codeGen = new CodeGen(mv, returnType, parameterTypes, fn.parameters().stream().map(Parameter::name).toArray(String[]::new),
         (type, n, slot) -> new Var((Type)type, n, slot));

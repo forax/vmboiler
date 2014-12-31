@@ -2,8 +2,6 @@ package com.github.forax.vmboiler;
 
 import static org.objectweb.asm.Opcodes.ALOAD;
 import static org.objectweb.asm.Opcodes.ASTORE;
-import static org.objectweb.asm.Opcodes.ILOAD;
-import static org.objectweb.asm.Opcodes.ISTORE;
 
 import org.objectweb.asm.MethodVisitor;
 
@@ -36,7 +34,7 @@ public class Var extends Value {
   void loadPrimitive(MethodVisitor mv) {
     Type type = type();
     int slot = this.slot + (type.isMixed()? 1: 0); 
-    mv.visitVarInsn(type.asmType().getOpcode(ILOAD), slot);
+    mv.visitVarInsn(loadOpcode(type.vmType()), slot);
   }
   
   @Override
@@ -44,17 +42,17 @@ public class Var extends Value {
     Type type = type();
     int slot = this.slot;
     if (type.isMixed()) {
-      mv.visitVarInsn(type.asmType().getOpcode(ILOAD), slot + 1);
+      mv.visitVarInsn(loadOpcode(type.vmType()), slot + 1);
       mv.visitVarInsn(ALOAD, slot);
       return;
     }
-    mv.visitVarInsn(type.asmType().getOpcode(ILOAD), slot);
+    mv.visitVarInsn(loadOpcode(type.vmType()), slot);
   }
   
   void storePrimitive(MethodVisitor mv) {
     Type type = type();
     int slot = this.slot + (type.isMixed()? 1: 0); 
-    mv.visitVarInsn(type.asmType().getOpcode(ISTORE), slot);
+    mv.visitVarInsn(storeOpcode(type.vmType()), slot);
   }
   
   void storeAll(MethodVisitor mv) {
@@ -62,9 +60,9 @@ public class Var extends Value {
     int slot = this.slot;
     if (type.isMixed()) {
       mv.visitVarInsn(ASTORE, slot);
-      mv.visitVarInsn(type.asmType().getOpcode(ISTORE), slot + 1);
+      mv.visitVarInsn(storeOpcode(type.vmType()), slot + 1);
       return;
     }
-    mv.visitVarInsn(type.asmType().getOpcode(ISTORE), slot);
+    mv.visitVarInsn(storeOpcode(type.vmType()), slot);
   }
 }

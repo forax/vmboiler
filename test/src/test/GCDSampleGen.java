@@ -30,11 +30,8 @@ public class GCDSampleGen {
       return this == INT_MIXED;
     }
     @Override
-    public org.objectweb.asm.Type asmType() {
-      if (this == BOOL) {
-        return org.objectweb.asm.Type.BOOLEAN_TYPE;
-      }
-      return org.objectweb.asm.Type.INT_TYPE;
+    public String vmType() {
+      return (this == BOOL)? Type.VM_BOOLEAN: Type.VM_INT;
     }
   }
   

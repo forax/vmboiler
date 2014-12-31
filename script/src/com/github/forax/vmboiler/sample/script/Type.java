@@ -8,17 +8,17 @@ import java.lang.invoke.MethodType;
 import java.util.HashMap;
 
 public enum Type implements com.github.forax.vmboiler.Type {
-  BOOL(BOOLEAN_TYPE),
-  INT(INT_TYPE),
-  MIXED_INT(INT_TYPE),
-  NUM(DOUBLE_TYPE),
-  MIXED_NUM(DOUBLE_TYPE),
-  OBJECT(org.objectweb.asm.Type.getType(Object.class));
+  BOOL(com.github.forax.vmboiler.Type.VM_BOOLEAN),
+  INT(com.github.forax.vmboiler.Type.VM_INT),
+  MIXED_INT(com.github.forax.vmboiler.Type.VM_INT),
+  NUM(com.github.forax.vmboiler.Type.VM_DOUBLE),
+  MIXED_NUM(com.github.forax.vmboiler.Type.VM_DOUBLE),
+  OBJECT(com.github.forax.vmboiler.Type.VM_OBJECT);
   
-  private final org.objectweb.asm.Type asmType;
+  private final String vmType;
   
-  private Type(org.objectweb.asm.Type asmType) {
-    this.asmType = asmType;
+  private Type(String vmType) {
+    this.vmType = vmType;
   }
   
   @Override
@@ -27,8 +27,8 @@ public enum Type implements com.github.forax.vmboiler.Type {
   }
   
   @Override
-  public org.objectweb.asm.Type asmType() {
-    return asmType;
+  public String vmType() {
+    return vmType;
   }
   
   public Type erase() {
@@ -114,7 +114,7 @@ public enum Type implements com.github.forax.vmboiler.Type {
       if (type.isMixed()) {
         continue;  // skip mixed type
       }
-      Class<?> clazz = classFromDesc(type.asmType().getDescriptor());
+      Class<?> clazz = classFromDesc(type.vmType());
       classToTypeMap.put(clazz, type);
       typeToClassMap.put(type, clazz);
     }

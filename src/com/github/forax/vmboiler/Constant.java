@@ -10,13 +10,6 @@ import static org.objectweb.asm.Opcodes.FCONST_2;
 import static org.objectweb.asm.Opcodes.ICONST_0;
 import static org.objectweb.asm.Opcodes.LCONST_0;
 import static org.objectweb.asm.Opcodes.SIPUSH;
-import static org.objectweb.asm.Type.BYTE;
-import static org.objectweb.asm.Type.CHAR;
-import static org.objectweb.asm.Type.DOUBLE;
-import static org.objectweb.asm.Type.FLOAT;
-import static org.objectweb.asm.Type.INT;
-import static org.objectweb.asm.Type.LONG;
-import static org.objectweb.asm.Type.SHORT;
 
 import org.objectweb.asm.MethodVisitor;
 
@@ -50,20 +43,20 @@ public final class Constant extends Value {
   }
   
   private static void load(MethodVisitor mv, Type type, Object constant) {
-    switch(type.asmType().getSort()) {
-    case BYTE:
-    case CHAR:
-    case SHORT:
-    case INT:
+    switch(type.vmType()) {
+    case Type.VM_BYTE:
+    case Type.VM_CHAR:
+    case Type.VM_SHORT:
+    case Type.VM_INT:
       loadInt(mv, constant);
       return;
-    case LONG:
+    case Type.VM_LONG:
       loadLong(mv, constant);
       return;
-    case FLOAT:
+    case Type.VM_FLOAT:
       loadFloat(mv, constant);
       return;
-    case DOUBLE:
+    case Type.VM_DOUBLE:
       loadDouble(mv, constant);
       return;
     default:  // string or null !

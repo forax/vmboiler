@@ -1,29 +1,17 @@
 package com.github.forax.vmboiler;
 
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ASTORE;
-import static org.objectweb.asm.Opcodes.ATHROW;
-import static org.objectweb.asm.Opcodes.DCONST_0;
-import static org.objectweb.asm.Opcodes.FCONST_0;
-import static org.objectweb.asm.Opcodes.GETSTATIC;
-import static org.objectweb.asm.Opcodes.GOTO;
-import static org.objectweb.asm.Opcodes.H_INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.ICONST_0;
-import static org.objectweb.asm.Opcodes.IFEQ;
-import static org.objectweb.asm.Opcodes.IFNE;
-import static org.objectweb.asm.Opcodes.IF_ACMPNE;
-import static org.objectweb.asm.Opcodes.ILOAD;
-import static org.objectweb.asm.Opcodes.INVOKESTATIC;
-import static org.objectweb.asm.Opcodes.IRETURN;
-import static org.objectweb.asm.Opcodes.LCONST_0;
-import static org.objectweb.asm.Type.BOOLEAN;
-import static org.objectweb.asm.Type.BYTE;
-import static org.objectweb.asm.Type.CHAR;
-import static org.objectweb.asm.Type.DOUBLE;
-import static org.objectweb.asm.Type.FLOAT;
-import static org.objectweb.asm.Type.INT;
-import static org.objectweb.asm.Type.LONG;
-import static org.objectweb.asm.Type.SHORT;
+import static com.github.forax.vmboiler.Type.VM_BOOLEAN;
+import static com.github.forax.vmboiler.Type.VM_BYTE;
+import static com.github.forax.vmboiler.Type.VM_CHAR;
+import static com.github.forax.vmboiler.Type.VM_DOUBLE;
+import static com.github.forax.vmboiler.Type.VM_FLOAT;
+import static com.github.forax.vmboiler.Type.VM_INT;
+import static com.github.forax.vmboiler.Type.VM_LONG;
+import static com.github.forax.vmboiler.Type.VM_SHORT;
+import static com.github.forax.vmboiler.Value.loadOpcode;
+import static com.github.forax.vmboiler.Value.returnOpcode;
+import static com.github.forax.vmboiler.Value.size;
+import static org.objectweb.asm.Opcodes.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,6 +26,32 @@ import org.objectweb.asm.MethodVisitor;
 import com.github.forax.vmboiler.rt.OptimisticError;
 import com.github.forax.vmboiler.rt.RT;
 
+/**
+ * Wrapper on top of the ASM MethodVisitor allowing to generate code that is optimistically typed.
+ * 
+ * Type
+ * {@link Type}
+ * 
+ * Values
+ * {@link Value}
+ * {@link Constant}
+ * {@link #createVar(Type, String)}
+ * 
+ * Operations
+ * {@link #ret(Value)}
+ * {@link #move(Var, Value)}
+ * {@link #call(Handle, Object[], Object, Object, Var, String, Value...)}
+ * 
+ * {@link #label(Label)}
+ * {@link #jump(Label)}
+ * {@link #jumpIfTrue(Value, Label)}
+ * {@link #jumpIfFalse(Value, Label)}
+ * 
+ * End
+ * The method {@link #end()} must be called after all instructions are generated.
+ * By default CodeGen delay the generation of bytecodes that handles deoptimization at the end of the method.
+ * If you do not want this behavior, you can call {@link #end()} after any operations.
+ */
 public final class CodeGen {
   private final MethodVisitor mv;
   private final VarFactory varFactory;
@@ -91,7 +105,7 @@ public final class CodeGen {
   
   public Var createVar(Type type, String name) {
     Var var = varFactory.create(type, name, slotCount);
-    slotCount += type.asmType().getSize() + (type.isMixed()? 1: 0);
+    slotCount += size(type.vmType()) + (type.isMixed()? 1: 0);
     return var;
   }
   
@@ -104,7 +118,7 @@ public final class CodeGen {
       var.storeAll(mv);
       return;
     }
-    if (!varType.isMixed() || valueType.isMixed() || !varType.asmType().equals(valueType.asmType())) {
+    if (!varType.isMixed() || valueType.isMixed() || varType.vmType() != valueType.vmType()) {
       throw new IllegalArgumentException("invalid convertion " + varType + " " + valueType);
     }
     value.loadAll(mv);
@@ -130,9 +144,9 @@ public final class CodeGen {
     StringBuilder desc = new StringBuilder().append('(');
     for(Value v: values) {
       v.loadPrimitive(mv);
-      desc.append(v.type().asmType().getDescriptor());
+      desc.append(v.type().vmType());
     }
-    desc.append(')').append(result.type().asmType());
+    desc.append(')').append(result.type().vmType());
     
     Label start = new Label();
     Label end = new Label();
@@ -184,7 +198,7 @@ public final class CodeGen {
       for(Value v: values) {
         v.loadAll(mv);
         Type type = v.type();
-        desc2.append(type.asmType());
+        desc2.append(type.vmType());
         if (type.isMixed()) {
           desc2.append("Ljava/lang/Object;");
           mixedDesc.append('M');
@@ -192,7 +206,7 @@ public final class CodeGen {
           mixedDesc.append('.');
         }
       }
-      desc2.append(')').append(result.type().asmType());
+      desc2.append(')').append(result.type().vmType());
       Label start = new Label();
       Label end = new Label();
       boolean mixed = result.type().isMixed();
@@ -227,16 +241,15 @@ public final class CodeGen {
   
   
   public void ret(Value value) {
+    MethodVisitor mv = this.mv;
     Type valueType = value.type();
-    if (returnType != valueType && (!returnType.isMixed() || valueType.isMixed() || !returnType.asmType().equals(valueType.asmType()))) {
+    if (returnType != valueType && (!returnType.isMixed() || valueType.isMixed() || returnType.vmType() != valueType.vmType())) {
       throw new IllegalArgumentException("invalid convertion " + returnType + " " + valueType);
     }
     
-    MethodVisitor mv = this.mv;
-    Type type = value.type();
     if (!valueType.isMixed()) {
       value.loadPrimitive(mv);
-      mv.visitInsn(type.asmType().getOpcode(IRETURN));
+      mv.visitInsn(returnOpcode(valueType.vmType()));
       return;
     }
     Var var = (Var)value;
@@ -245,8 +258,8 @@ public final class CodeGen {
     CodeGen.loadNone(mv);
     Label endLabel = new Label();
     mv.visitJumpInsn(IF_ACMPNE, endLabel);
-    mv.visitVarInsn(type.asmType().getOpcode(ILOAD), slot + 1);
-    mv.visitInsn(type.asmType().getOpcode(IRETURN));
+    mv.visitVarInsn(loadOpcode(valueType.vmType()), slot + 1);
+    mv.visitInsn(returnOpcode(valueType.vmType()));
     mv.visitLabel(endLabel);
     mv.visitVarInsn(ALOAD, slot);
     CodeGen.newOptimisticError(mv);
@@ -261,7 +274,7 @@ public final class CodeGen {
     mv.visitJumpInsn(GOTO, label);
   }
   public void jumpIfTrue(Value value, Label label) {
-    if (value.type().asmType().getSort() != BOOLEAN) {
+    if (value.type().vmType() != VM_BOOLEAN) {
       throw new IllegalArgumentException("value.type must be a boolean");
     }
     MethodVisitor mv = this.mv;
@@ -269,7 +282,7 @@ public final class CodeGen {
     mv.visitJumpInsn(IFNE, label);
   }
   public void jumpIfFalse(Value value, Label label) {
-    if (value.type().asmType().getSort() != BOOLEAN) {
+    if (value.type().vmType() != VM_BOOLEAN) {
       throw new IllegalArgumentException("value.type must be a boolean");
     }
     MethodVisitor mv = this.mv;
@@ -283,6 +296,7 @@ public final class CodeGen {
   
   public void end() {
     sideExit.run();
+    sideExit = () -> { /* empty */};
   }
   
   private static final String RT = RT.class.getName().replace('.', '/');
@@ -302,25 +316,25 @@ public final class CodeGen {
   }
   
   private static void loadZero(MethodVisitor mv, Type type) {
-    switch(type.asmType().getSort()) {
-    case BOOLEAN:
-    case BYTE:
-    case CHAR:
-    case SHORT:
-    case INT:
+    switch(type.vmType()) {
+    case VM_BOOLEAN:
+    case VM_BYTE:
+    case VM_CHAR:
+    case VM_SHORT:
+    case VM_INT:
       mv.visitInsn(ICONST_0);
       return;
-    case LONG:
+    case VM_LONG:
       mv.visitInsn(LCONST_0);
       return;
-    case FLOAT:
+    case VM_FLOAT:
       mv.visitInsn(FCONST_0);
       return;
-    case DOUBLE:
+    case VM_DOUBLE:
       mv.visitInsn(DCONST_0);
       return;
-    default:
-      throw new AssertionError("type " + type + " is mixed with a non primitive");
+    default:  //OBJECT, ARRAY
+      mv.visitInsn(ACONST_NULL);
     }
   }
 }
