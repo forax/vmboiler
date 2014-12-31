@@ -3,6 +3,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" output="script/classes" path="script/gen-src"/>
 	<classpathentry kind="src" output="script/classes" path="script/src"/>
+	<classpathentry kind="src" path="test/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="lib" path="lib/asm-debug-all-5.0.3.jar" sourcepath="lib/src.zip"/>
 	<classpathentry kind="lib" path="script/lib/tatoo-runtime.jar"/>
