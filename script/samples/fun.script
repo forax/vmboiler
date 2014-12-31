@@ -1,0 +1,8 @@
+fn (identity x: x)
+  
+fn (main:
+  a = identity(1)
+  b = identity('foo')
+  print(a)
+  print(b)
+)

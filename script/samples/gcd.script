@@ -1,0 +1,12 @@
+fn (gcd a, b:
+  while (a != b
+    if (a > b
+      a = a - b
+      b = b - a))
+  a)
+
+fn (main:
+  print(gcd(3, 9))
+)
+
+

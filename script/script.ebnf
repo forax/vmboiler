@@ -1,0 +1,86 @@
+directives:
+  autoalias
+
+imports:
+  java.util.List
+  com.github.forax.vmboiler.sample.script.Expr
+  com.github.forax.vmboiler.sample.script.Fn
+  
+priorities:
+  mult = 6 left
+  plus = 5 left
+  test = 4 left
+  lpar = 3 left
+  id = 2 left
+  assign = 1 right
+
+tokens:
+  assign = '='              [assign]
+  colon= ':'
+  eol = '\n'
+  lpar = '\('               [lpar]
+  rpar = '\)'
+  add = '\+'                [plus]
+  sub = '-'                 [plus]
+  mul = '\*'                [mult]
+  div = '\/'                [mult]
+  rem = '%'                 [mult]
+  eq = '=='                 [test]
+  ne = '!='                 [test]
+  lt = '<'                  [test]
+  le = '<='                 [test]
+  gt = '>'                  [test]
+  ge = '>='                 [test]
+  fn = 'fn'
+  if_ = 'if'
+  while_ = 'while'
+  
+  text = "'[^']*'"
+  integer = "[0-9]+"
+  id = "[^ \t\r\n=:,();]+"   [id]
+ 
+blanks:
+ space = "( |\t|\r|\n|,|;)+"
+
+comments:
+ comment = "#([^\r\n])*(\r)?\n"
+ 
+types:
+ 'id': String
+ 'integer': Object
+ 'text': String
+ expr: Expr
+ fun: Fn
+ 
+starts:
+ script
+
+productions:
+ script = fun*  { script }
+        ;
+ 
+ fun = 'fn' '(' 'id' 'id'* ':' expr* ')'    { fun }
+     ;
+ 
+ expr = 'integer'                                   { expr_integer }
+      | 'text'                                      { expr_text }
+      | '(' expr* ')'                               { expr_block }
+      | 'id'                                   [id] { expr_var_access }
+      | 'id' '=' expr                      [assign] { expr_var_assignment } 
+      | 'id' '(' expr* ')'                          { expr_call }
+      | 'if' '(' expr  expr  expr ')'               { expr_if }
+      | 'while' '(' expr expr* ')'                  { expr_while }
+      
+      | expr '*' expr                        [mult] { expr_mul }
+      | expr '/' expr                        [mult] { expr_div }
+      | expr 'rem' expr                      [mult] { expr_rem }
+      | expr '+' expr                        [plus] { expr_add }
+      | expr '-' expr                        [plus] { expr_sub }
+      | expr '==' expr                       [test] { expr_eq }
+      | expr '!=' expr                       [test] { expr_ne }
+      | expr '<' expr                        [test] { expr_lt }
+      | expr '<=' expr                       [test] { expr_le }
+      | expr '>' expr                        [test] { expr_gt }
+      | expr '>=' expr                       [test] { expr_ge }
+      ;
+      

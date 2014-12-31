@@ -1,0 +1,5 @@
+fn (hello, msg:
+  print(msg))
+  
+fn (main:
+  hello('hello'))

@@ -1,0 +1,7 @@
+fn (fibo n:
+  1836311903)
+
+fn (main:
+  print(fibo(45))
+)
+
