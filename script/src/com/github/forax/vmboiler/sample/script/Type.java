@@ -1,19 +1,15 @@
 package com.github.forax.vmboiler.sample.script;
 
-import static org.objectweb.asm.Type.BOOLEAN_TYPE;
-import static org.objectweb.asm.Type.DOUBLE_TYPE;
-import static org.objectweb.asm.Type.INT_TYPE;
-
 import java.lang.invoke.MethodType;
 import java.util.HashMap;
 
 public enum Type implements com.github.forax.vmboiler.Type {
-  BOOL(com.github.forax.vmboiler.Type.VM_BOOLEAN),
-  INT(com.github.forax.vmboiler.Type.VM_INT),
-  MIXED_INT(com.github.forax.vmboiler.Type.VM_INT),
-  NUM(com.github.forax.vmboiler.Type.VM_DOUBLE),
-  MIXED_NUM(com.github.forax.vmboiler.Type.VM_DOUBLE),
-  OBJECT(com.github.forax.vmboiler.Type.VM_OBJECT);
+  BOOL(VM_BOOLEAN),
+  INT(VM_INT),
+  MIXED_INT(VM_INT),
+  NUM(VM_DOUBLE),
+  MIXED_NUM(VM_DOUBLE),
+  OBJECT(VM_OBJECT);
   
   private final String vmType;
   

@@ -1,5 +1,12 @@
 package com.github.forax.vmboiler;
 
+import static com.github.forax.vmboiler.Type.VM_BYTE;
+import static com.github.forax.vmboiler.Type.VM_CHAR;
+import static com.github.forax.vmboiler.Type.VM_DOUBLE;
+import static com.github.forax.vmboiler.Type.VM_FLOAT;
+import static com.github.forax.vmboiler.Type.VM_INT;
+import static com.github.forax.vmboiler.Type.VM_LONG;
+import static com.github.forax.vmboiler.Type.VM_SHORT;
 import static org.objectweb.asm.Opcodes.ACONST_NULL;
 import static org.objectweb.asm.Opcodes.BIPUSH;
 import static org.objectweb.asm.Opcodes.DCONST_0;
@@ -44,19 +51,19 @@ public final class Constant extends Value {
   
   private static void load(MethodVisitor mv, Type type, Object constant) {
     switch(type.vmType()) {
-    case Type.VM_BYTE:
-    case Type.VM_CHAR:
-    case Type.VM_SHORT:
-    case Type.VM_INT:
+    case VM_BYTE:
+    case VM_CHAR:
+    case VM_SHORT:
+    case VM_INT:
       loadInt(mv, constant);
       return;
-    case Type.VM_LONG:
+    case VM_LONG:
       loadLong(mv, constant);
       return;
-    case Type.VM_FLOAT:
+    case VM_FLOAT:
       loadFloat(mv, constant);
       return;
-    case Type.VM_DOUBLE:
+    case VM_DOUBLE:
       loadDouble(mv, constant);
       return;
     default:  // string or null !
