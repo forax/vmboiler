@@ -9,6 +9,10 @@ import java.lang.invoke.MethodType;
 import java.lang.invoke.MutableCallSite;
 import java.lang.invoke.WrongMethodTypeException;
 
+/**
+ * The runtime support that handle the dynamic part of the deoptimization.
+ * This call should never be referenced directly.
+ */
 public final class RT {
   // called by generated code
   public static CallSite bsm(Lookup lookup, String name, MethodType methodType, Object... array) throws Throwable {

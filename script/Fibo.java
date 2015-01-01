@@ -3,7 +3,7 @@ public class Fibo {
     return (n < 2)? 1: fibo(n - 1) + fibo(n - 2);
   }
   public static void main(String[] args) {
-    System.out.println(fibo(45));
+    System.out.println(fibo(/*46*/ 45));
   }
 }
 

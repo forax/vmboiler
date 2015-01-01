@@ -5,6 +5,9 @@ import static org.objectweb.asm.Opcodes.ASTORE;
 
 import org.objectweb.asm.MethodVisitor;
 
+/**
+ 
+ */
 public class Var extends Value {
   private final String name;  // may be null
   private final int slot;

@@ -20,9 +20,19 @@ import static org.objectweb.asm.Opcodes.SIPUSH;
 
 import org.objectweb.asm.MethodVisitor;
 
+/**
+ * A side effect free constant.
+ */
 public final class Constant extends Value {
   private final Object constant;  // may be null
 
+  /**
+   * Creates a constant with a type and a value.
+   * The value must be a type representable as a constant of
+   * the constant pool.
+   * @param type the type of the constant.
+   * @param constant the value of the constant.
+   */
   public Constant(Type type, Object constant) {
     super(type);
     if (type.isMixed()) {
@@ -31,6 +41,10 @@ public final class Constant extends Value {
     this.constant = constant;
   }
 
+  /**
+   * Returns the value of the constant.
+   * @return the value of the constant.
+   */
   public Object constant() {
     return constant;
   }
