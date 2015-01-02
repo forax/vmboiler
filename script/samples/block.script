@@ -1,0 +1,9 @@
+fn (test:
+  'this line should be removed, but not the next one'
+  'done'
+)
+
+fn (main:
+  test()     # call with void as return type ?
+  'done'
+  )
