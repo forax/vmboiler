@@ -5,9 +5,11 @@
   <property name="tatoo.jar" location="${tatoo.dir}/tatoo.jar"/>
 	<property name="lib.dir" location="lib"/>
 	<property name="tatoo-runtime.jar" location="${lib.dir}/tatoo-runtime.jar"/>
+	<property name="asm.jar" location="../lib/asm-debug-all-5.0.3.jar"/>
+	<property name="vmboiler.jar" location="../vmboiler-0.1.jar"/>
 	
   <property name="src" value="src"/>
-  <property name="classes" value="classes"/>
+  <property name="classes" value="output/classes"/>
   <property name="gen-src" value="gen-src"/>
   <property name="ebnf.file" value="script.ebnf"/>
   	
@@ -28,14 +30,27 @@
 	</ebnf>
   </target>
 	
-  <target name="all" depends="gen">
+  <target name="all" depends="jar">
   </target>
+	
+	<target name="jar" depends="compile">
+		<jar destfile="script.jar"
+			   basedir="${classes}">
+			<zipfileset includes="**/*.class" src="${tatoo-runtime.jar}"/>
+			<zipfileset includes="**/*.class" src="${vmboiler.jar}"/>
+			<zipfileset includes="org/objectweb/asm/*.class,org/objectweb/asm/util/*.class,org/objectweb/asm/tree/**/*.class,org/objectweb/asm/signature/*.class" src="${asm.jar}" />
+			<manifest>
+			  <attribute name="Main-Class"
+			             value="Main"/>
+			  </manifest>
+		</jar>
+	</target>
 	
 	<target name="compile">
 		<mkdir dir="${classes}"/>
 		<javac srcdir="${src}:${gen-src}"
            destdir="${classes}"
-           classpath="${tatoo-runtime.jar}"
+           classpath="${tatoo-runtime.jar}:${vmboiler.jar}:${asm.jar}"
 			     includeantruntime="false"
            debug="on"
 	  />
