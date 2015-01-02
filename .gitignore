@@ -1,5 +1,8 @@
 *.class
 
+# jar and zips generated
+vmboiler-*
+
 # remove log file and assembly dump file
 log*
 
