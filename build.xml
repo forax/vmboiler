@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="project" default="all">
+    <description>
+      vmboiler
+    </description>
+	  <property name="asm.jar" location="lib/asm-debug-all-5.0.3.jar"/>
+    <property name="vmboiler.jar" value="vmboiler-0.1.jar"/>
+	  <property name="src.zip" value="vmboiler-src.zip"/>
+	  <property name="doc.zip" value="vmboiler-doc.zip"/>
+
+	  <target name="all" depends="jar, zipsrc, zipdoc">
+	  </target>
+	
+	  
+	
+    <target name="jar" depends="compile">
+      <jar destfile="${vmboiler.jar}"
+      	   basedir="output/classes">
+      </jar>
+    </target>
+    
+    <target name="compile">
+    	<mkdir dir="output/classes"/>
+    	<javac srcdir="src"
+             destdir="output/classes"
+             classpath="${asm.jar}"
+    		     includeantruntime="no"
+    		     source="1.8"
+             debug="on"
+	    />
+    </target>
+	
+	  <target name="zipsrc">
+	    <zip destfile="${src.zip}"
+	         basedir="src">
+	    </zip>
+	  </target>
+	
+ 	  <target name="zipdoc">
+	      <zip destfile="${doc.zip}"
+	           basedir="output/docs/api">
+	      </zip>
+	  </target>
+	
+	  <target name="doc">
+	  	<mkdir dir="output/docs/api"/>
+	  	<javadoc destdir="output/docs/api"
+	  		       classpath="${asm.jar}"
+	  	         version="true"
+	  	         use="true"
+	  	         windowtitle="vmboiler API">
+	  	    <doctitle><![CDATA[<h1>vmboiler API v1.0</h1>]]></doctitle>
+	  	    <link href="http://docs.oracle.com/javase/8/docs/api/"/>
+	  		<packageset dir="src" defaultexcludes="yes">
+	  		    <include name="com/github/forax/vmboiler/**"/>
+	  		</packageset>
+	  	</javadoc>
+	  </target>
+</project>
