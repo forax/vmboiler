@@ -15,8 +15,8 @@ public final class OptimisticError extends Error {
   }
 
   /**
-   * Return the return value of the method call.
-   * @return
+   * Returns the return value of the method call.
+   * @return the return value of the method call.
    */
   // called by generated code
   public Object value() {

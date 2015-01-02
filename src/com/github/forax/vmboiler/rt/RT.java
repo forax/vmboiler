@@ -14,7 +14,22 @@ import java.lang.invoke.WrongMethodTypeException;
  * This call should never be referenced directly.
  */
 public final class RT {
-  // called by generated code
+  /**
+   * ootstrap method called called in a deoptimisation path when at least one argument
+   * doesn't fit in its parameter type.
+   * 
+   * @param lookup lookup object
+   * @param name name of the virtual method
+   * @param methodType descriptor of the virtual method
+   * @param array parameters that begins with the 3 following objects
+   *        a bootstrap method as method handle,
+   *        the deopt callback for arguments as a method handle,
+   *        an array encoding if arguments are mixed ('M') or not ('.')
+   *        and ends with the boostrap arguments. 
+   * @return a callsite
+   * @throws Throwable if an exception occurs
+   */
+  //called by generated code
   public static CallSite bsm(Lookup lookup, String name, MethodType methodType, Object... array) throws Throwable {
     MethodHandle bsm = (MethodHandle)array[0];
     MethodHandle deoptArgCallback = (MethodHandle)array[1];     // boolean mh(Object[] values)
@@ -43,7 +58,18 @@ public final class RT {
     return new ConstantCallSite(target);
   }
   
-  @SuppressWarnings("unused") // called by generated code
+  /**
+   * Bootstrap method called called in a deoptimisation path when a return value
+   * doesn't fit in the return type.
+   *  
+   * @param lookup the lookup object.
+   * @param name the name of the method
+   * @param methodType always (Object)OptimisiticError
+   * @param deoptReturnCallback the callback to cause to indicate a deopt error.
+   * @return a call site
+   * @throws Throwable if an error occurs
+   */
+  // called by generated code
   public static CallSite bsm_optimistic_failure(Lookup lookup, String name, MethodType methodType, MethodHandle deoptReturnCallback) throws Throwable {
     //System.out.println("bsm_optimistic_failure " +  name + " with " + deoptReturnCallback);
     
@@ -113,6 +139,10 @@ public final class RT {
     return (ref == NONE)? prim: ref;
   }
   
+  /**
+   * Well know constant indicating if a mixed type store its value
+   * in its primitive slot or in its object slot.
+   */
   // used by generated code
   public static final Object NONE = new Object();
   

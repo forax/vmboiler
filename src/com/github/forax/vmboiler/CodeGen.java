@@ -75,7 +75,7 @@ public final class CodeGen {
   /**
    * Variables factory.
    * 
-   * @See CodeGen#CodeGen(MethodVisitor, Type, Type[], String[], VarFactory)
+   * @see CodeGen#CodeGen(MethodVisitor, Type, Type[], String[], VarFactory)
    */
   public interface VarFactory {
     /**
