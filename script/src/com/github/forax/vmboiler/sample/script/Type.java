@@ -4,6 +4,7 @@ import java.lang.invoke.MethodType;
 import java.util.HashMap;
 
 public enum Type implements com.github.forax.vmboiler.Type {
+  VOID(VM_VOID),
   BOOL(VM_BOOLEAN),
   INT(VM_INT),
   MIXED_INT(VM_INT),
@@ -98,6 +99,9 @@ public enum Type implements com.github.forax.vmboiler.Type {
   }
   
   private static Class<?> classFromDesc(String descriptor) { // ugly isn't it ?
+    if (descriptor.equals("V")) {
+      return void.class;
+    }
     return MethodType.fromMethodDescriptorString('(' + descriptor + ")V", null).parameterType(0);
   }
   

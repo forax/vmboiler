@@ -7,6 +7,7 @@ import static com.github.forax.vmboiler.Type.VM_FLOAT;
 import static com.github.forax.vmboiler.Type.VM_INT;
 import static com.github.forax.vmboiler.Type.VM_LONG;
 import static com.github.forax.vmboiler.Type.VM_SHORT;
+import static com.github.forax.vmboiler.Type.VM_VOID;
 import static org.objectweb.asm.Opcodes.ACONST_NULL;
 import static org.objectweb.asm.Opcodes.BIPUSH;
 import static org.objectweb.asm.Opcodes.DCONST_0;
@@ -35,8 +36,8 @@ public final class Constant extends Value {
    */
   public Constant(Type type, Object constant) {
     super(type);
-    if (type.isMixed()) {
-      throw new IllegalArgumentException("constant can not have mixed type");
+    if (type.isMixed() || type.vmType() == VM_VOID) {
+      throw new IllegalArgumentException("a constant can not have a type VM_VOID or mixed");
     }
     this.constant = constant;
   }

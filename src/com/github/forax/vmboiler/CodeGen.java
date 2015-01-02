@@ -8,6 +8,7 @@ import static com.github.forax.vmboiler.Type.VM_FLOAT;
 import static com.github.forax.vmboiler.Type.VM_INT;
 import static com.github.forax.vmboiler.Type.VM_LONG;
 import static com.github.forax.vmboiler.Type.VM_SHORT;
+import static com.github.forax.vmboiler.Type.VM_VOID;
 import static com.github.forax.vmboiler.Value.loadOpcode;
 import static com.github.forax.vmboiler.Value.returnOpcode;
 import static com.github.forax.vmboiler.Value.size;
@@ -196,7 +197,7 @@ public final class CodeGen {
     if (!varType.isMixed() || valueType.isMixed() || varType.vmType() != valueType.vmType()) {
       throw new IllegalArgumentException("invalid convertion " + varType + " " + valueType);
     }
-    value.loadAll(mv);
+    value.loadPrimitive(mv);
     loadNone(mv);
     var.storeAll(mv);
   }
@@ -213,6 +214,7 @@ public final class CodeGen {
    * @param deoptReturnCallback a method handle as a String or a {@link Handle}
    *        that will be called if return value doesn't match its declared type
    * @param result the variable that will contains the result value
+   *        (this variable can have a {@link Type#vmType()} equals to {@link Type#VM_VOID}).
    * @param name the name of the 'virtual method'.
    * @param values the arguments of the call.
    */
@@ -449,6 +451,8 @@ public final class CodeGen {
   
   private static void loadZero(MethodVisitor mv, Type type) {
     switch(type.vmType()) {
+    case VM_VOID:
+      throw new IllegalArgumentException("type void not allowed here");
     case VM_BOOLEAN:
     case VM_BYTE:
     case VM_CHAR:

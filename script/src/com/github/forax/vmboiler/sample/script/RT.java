@@ -8,7 +8,6 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import com.github.forax.vmboiler.rt.OptimisticError;
@@ -75,8 +74,8 @@ public class RT {
     }
   }
   
-  private static MethodHandle checkTypeAndConvert(Class<?> returnType, Class<?> type) {
-    return MethodHandles.guardWithTest(IS_INSTANCE.bindTo(type),
+  private static MethodHandle checkTypeAndConvert(Class<?> returnType) {
+    return MethodHandles.guardWithTest(IS_INSTANCE.bindTo(boxed(returnType)),
         MethodHandles.identity(Object.class).asType(MethodType.methodType(returnType, Object.class)),
         THROW_OPTIMISTIC_ERROR.asType(MethodType.methodType(returnType, Object.class)));
   }
@@ -101,10 +100,10 @@ public class RT {
     MethodHandle target;
     Class<?> returnType = methodType.returnType();
     Class<?> parameterType = methodType.parameterType(0);
-    if (returnType == parameterType || returnType == Object.class) {
+    if (returnType == parameterType || returnType == Object.class || returnType == void.class) {
       target = MethodHandles.identity(parameterType).asType(methodType);
     } else {
-      target = checkTypeAndConvert(returnType, boxed(returnType)).asType(methodType);
+      target = checkTypeAndConvert(returnType).asType(methodType);
     }
     return new ConstantCallSite(target);
   }
@@ -208,7 +207,7 @@ public class RT {
     } else {
       target = mhs[1];
       if (target.type().returnType() != methodType.returnType()) {
-        target = MethodHandles.filterReturnValue(target, checkTypeAndConvert(methodType.returnType(), boxed(methodType.returnType())));
+        target = MethodHandles.filterReturnValue(target, checkTypeAndConvert(methodType.returnType()));
       }
       target = target.asType(methodType);
     }

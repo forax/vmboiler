@@ -6,12 +6,24 @@ import static org.objectweb.asm.Opcodes.ASTORE;
 import org.objectweb.asm.MethodVisitor;
 
 /**
- 
+ * A variable with an optional name and a type.
+ * A variable has also a slot, i.e. an index into the local variable table
+ * but this slot is intended to be used by {@link CodeGen} only. 
+ * 
+ * This class can be inherited.
+ * 
+ * @see CodeGen.VarFactory
  */
 public class Var extends Value {
   private final String name;  // may be null
   private final int slot;
 
+  /**
+   * Initialize a variable
+   * @param type the type of the variable.
+   * @param name the name of the variable or null.
+   * @param slot a slot number
+   */
   protected Var(Type type, String name, int slot) {
     super(type);
     if (slot < 0) {
@@ -21,9 +33,19 @@ public class Var extends Value {
     this.slot = slot;
   }
 
+  /**
+   * Returns the name of the current variable.
+   * @return the name of the current variable or null.
+   */
   public String name() {
     return name;
   }
+  
+  /**
+   * Returns the slot of the current variable.
+   * This value is intended to be used by {@link CodeGen} only.
+   * @return the slot of the current variable.
+   */
   public int slot() {
     return slot;
   }
@@ -36,6 +58,9 @@ public class Var extends Value {
   @Override
   void loadPrimitive(MethodVisitor mv) {
     Type type = type();
+    if (type.vmType() == Type.VM_VOID) {
+      return;
+    }
     int slot = this.slot + (type.isMixed()? 1: 0); 
     mv.visitVarInsn(loadOpcode(type.vmType()), slot);
   }
@@ -43,6 +68,9 @@ public class Var extends Value {
   @Override
   void loadAll(MethodVisitor mv) {
     Type type = type();
+    if (type.vmType() == Type.VM_VOID) {
+      return;
+    }
     int slot = this.slot;
     if (type.isMixed()) {
       mv.visitVarInsn(loadOpcode(type.vmType()), slot + 1);
@@ -54,12 +82,18 @@ public class Var extends Value {
   
   void storePrimitive(MethodVisitor mv) {
     Type type = type();
+    if (type.vmType() == Type.VM_VOID) {
+      return;
+    }
     int slot = this.slot + (type.isMixed()? 1: 0); 
     mv.visitVarInsn(storeOpcode(type.vmType()), slot);
   }
   
   void storeAll(MethodVisitor mv) {
     Type type = type();
+    if (type.vmType() == Type.VM_VOID) {
+      return;
+    }
     int slot = this.slot;
     if (type.isMixed()) {
       mv.visitVarInsn(ASTORE, slot);

@@ -25,13 +25,13 @@ public class Linker {
     
     CallSite createCallSite(Linker linker, String name, MethodType methodType) {
       return callSiteMap.computeIfAbsent(methodType, key -> {
+        Type returnType = Type.getTypeFromClass(methodType.returnType());
         Type[] parameterTypes = methodType.parameterList().stream().map(Type::getTypeFromClass).toArray(Type[]::new);
         HashMap<Expr, Binding> bindingMap = bindingMapMap.computeIfAbsent(methodType.parameterList(), key2 -> {
           HashMap<Expr, Binding> newBindingMap = new HashMap<>();
-          TypeInferer.inferType(fn, parameterTypes, newBindingMap);
+          TypeInferer.inferType(fn, returnType, parameterTypes, newBindingMap);
           return newBindingMap;
         });
-        Type returnType = Type.getTypeFromClass(methodType.returnType());
         return new InvalidableCallSite(methodType, () ->
             Generator.generate(fn, linker, bindingMap, returnType.mix(true) /*FIXME ?*/, name, parameterTypes));
       });

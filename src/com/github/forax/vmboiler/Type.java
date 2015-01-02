@@ -14,14 +14,16 @@ public interface Type {
    * Returns the descriptor of the type using the class file format.
    * If the type is mixed, the VM type is the type of the primitive part of the
    * mixed type.
-   * It can be a {@link #VM_BOOLEAN}, a {@link #VM_BYTE}, a {@link #VM_CHAR},
-   * a {@link #VM_SHORT}, a {@link #VM_INT}, a {@link #VM_LONG},
-   * a {@link #VM_FLOAT}, a {@link #VM_DOUBLE}, a {@link #VM_OBJECT} or
-   * a user defined type if it's an object type.
+   * It can be a {@link #VM_VOID}, {@link #VM_BOOLEAN}, a {@link #VM_BYTE},
+   * a {@link #VM_CHAR}, a {@link #VM_SHORT}, a {@link #VM_INT},
+   * a {@link #VM_LONG}, a {@link #VM_FLOAT}, a {@link #VM_DOUBLE},
+   * a {@link #VM_OBJECT} or a user defined type if it's an object type.
    * @return the descriptor of the type using the class file format.
    */
   String vmType();
   
+  /** The descriptor of void. */
+  public static final String VM_VOID     = "V";
   /** The descriptor of a boolean. */
   public static final String VM_BOOLEAN  = "Z";
   /** The descriptor of a byte. */

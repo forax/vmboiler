@@ -3,6 +3,16 @@ package com.github.forax.vmboiler;
 import java.util.Objects;
 
 import org.objectweb.asm.MethodVisitor;
+
+import static com.github.forax.vmboiler.Type.VM_BOOLEAN;
+import static com.github.forax.vmboiler.Type.VM_BYTE;
+import static com.github.forax.vmboiler.Type.VM_CHAR;
+import static com.github.forax.vmboiler.Type.VM_DOUBLE;
+import static com.github.forax.vmboiler.Type.VM_FLOAT;
+import static com.github.forax.vmboiler.Type.VM_INT;
+import static com.github.forax.vmboiler.Type.VM_LONG;
+import static com.github.forax.vmboiler.Type.VM_SHORT;
+import static com.github.forax.vmboiler.Type.VM_VOID;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
@@ -40,10 +50,10 @@ public abstract class Value {
     return RETURN_OPS[vmType.charAt(0) - 'B'];
   }
   static int size(String vmType) {
-    return (vmType == Type.VM_LONG || vmType == Type.VM_DOUBLE)?2 :1; 
+    return (vmType == VM_LONG || vmType == VM_DOUBLE)?2: (vmType == VM_VOID)? 0: 1;
   }
   
-  private static final int[] LOAD_OPS =   { ILOAD  , ILOAD  , DLOAD  , 0, FLOAD  , 0, 0, ILOAD  , LLOAD  , 0, ALOAD  , 0, 0, 0, 0, 0, 0, ILOAD  , 0, 0, 0, 0, 0, 0, ILOAD };
-  private static final int[] STORE_OPS =  { ISTORE , ISTORE , DSTORE , 0, FSTORE , 0, 0, ISTORE , LSTORE , 0, ASTORE , 0, 0, 0, 0, 0, 0, ISTORE , 0, 0, 0, 0, 0, 0, ISTORE };
-  private static final int[] RETURN_OPS = { IRETURN, IRETURN, DRETURN, 0, FRETURN, 0, 0, IRETURN, LRETURN, 0, ARETURN, 0, 0, 0, 0, 0, 0, IRETURN, 0, 0, 0, 0, 0, 0, IRETURN };
+  private static final int[] LOAD_OPS =   { ILOAD  , ILOAD  , DLOAD  , 0, FLOAD  , 0, 0, ILOAD  , LLOAD  , 0, ALOAD  , 0, 0, 0, 0, 0, 0, ILOAD  , 0, 0, 0     , 0, 0, 0, ILOAD };
+  private static final int[] STORE_OPS =  { ISTORE , ISTORE , DSTORE , 0, FSTORE , 0, 0, ISTORE , LSTORE , 0, ASTORE , 0, 0, 0, 0, 0, 0, ISTORE , 0, 0, 0     , 0, 0, 0, ISTORE };
+  private static final int[] RETURN_OPS = { IRETURN, IRETURN, DRETURN, 0, FRETURN, 0, 0, IRETURN, LRETURN, 0, ARETURN, 0, 0, 0, 0, 0, 0, IRETURN, 0, 0, RETURN, 0, 0, 0, IRETURN };
 }
