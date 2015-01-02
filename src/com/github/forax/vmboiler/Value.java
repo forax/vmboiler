@@ -1,19 +1,13 @@
 package com.github.forax.vmboiler;
 
+import static com.github.forax.vmboiler.Type.VM_DOUBLE;
+import static com.github.forax.vmboiler.Type.VM_LONG;
+import static com.github.forax.vmboiler.Type.VM_VOID;
+import static org.objectweb.asm.Opcodes.*;
+
 import java.util.Objects;
 
 import org.objectweb.asm.MethodVisitor;
-
-import static com.github.forax.vmboiler.Type.VM_BOOLEAN;
-import static com.github.forax.vmboiler.Type.VM_BYTE;
-import static com.github.forax.vmboiler.Type.VM_CHAR;
-import static com.github.forax.vmboiler.Type.VM_DOUBLE;
-import static com.github.forax.vmboiler.Type.VM_FLOAT;
-import static com.github.forax.vmboiler.Type.VM_INT;
-import static com.github.forax.vmboiler.Type.VM_LONG;
-import static com.github.forax.vmboiler.Type.VM_SHORT;
-import static com.github.forax.vmboiler.Type.VM_VOID;
-import static org.objectweb.asm.Opcodes.*;
 
 /**
  * Base class that represents either {@link Var a virtual register} or
