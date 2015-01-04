@@ -152,11 +152,24 @@ public class RT {
       return toBig(a).multiply(toBig(b));
     }
     
+    public static int div(int a, int b) {
+      return a / b;
+    }
+    public static Object div(Object a, Object b) {
+      return toBig(a).divide(toBig(b));
+    }
+    
     public static boolean lt(int a, int b) {
       return a < b;
     }
     public static boolean lt(Object a, Object b) {
       return toBig(a).compareTo(toBig(b)) < 0;
+    }
+    public static boolean le(int a, int b) {
+      return a <= b;
+    }
+    public static boolean le(Object a, Object b) {
+      return toBig(a).compareTo(toBig(b)) <= 0;
     }
     
     public static boolean gt(int a, int b) {
@@ -165,7 +178,19 @@ public class RT {
     public static boolean gt(Object a, Object b) {
       return toBig(a).compareTo(toBig(b)) > 0;
     }
+    public static boolean ge(int a, int b) {
+      return a >= b;
+    }
+    public static boolean ge(Object a, Object b) {
+      return toBig(a).compareTo(toBig(b)) >= 0;
+    }
     
+    public static boolean eq(int a, int b) {
+      return a == b;
+    }
+    public static boolean eq(Object a, Object b) {
+      return toBig(a).equals(toBig(b));
+    }
     public static boolean ne(int a, int b) {
       return a != b;
     }
