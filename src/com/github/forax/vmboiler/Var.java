@@ -19,14 +19,22 @@ public class Var extends Value {
   private final int slot;
 
   /**
+   * Marker value to indicate that the variable is stack allocated.
+   */
+  public static final int STACK_ALLOCATED = -1;
+  
+  /**
    * Initialize a variable
    * @param type the type of the variable.
    * @param name the name of the variable or null.
-   * @param slot a slot number
+   * @param slot a slot number or STACK_ALLOCATED.
    */
   protected Var(Type type, String name, int slot) {
     super(type);
-    if (slot < 0) {
+    if (slot == STACK_ALLOCATED && type.isMixed()) {
+      throw new IllegalArgumentException("a stack allocated variable can not hvae a mixed type");
+    }
+    if (slot < -1) {
       throw new IllegalArgumentException("slot must be a positive number");
     }
     this.name = name;
@@ -44,7 +52,8 @@ public class Var extends Value {
   /**
    * Returns the slot of the current variable.
    * This value is intended to be used by {@link CodeGen} only.
-   * @return the slot of the current variable.
+   * @return the slot of the current variable or STACK_ALLOCATED
+   *         if the variable is stack allocated.
    */
   public int slot() {
     return slot;
@@ -61,8 +70,12 @@ public class Var extends Value {
     if (type.vmType() == Type.VM_VOID) {
       return;
     }
-    int slot = this.slot + (type.isMixed()? 1: 0); 
-    mv.visitVarInsn(loadOpcode(type.vmType()), slot);
+    int slot = this.slot;
+    if (this.slot == STACK_ALLOCATED) {
+      // do nothing, the result is already on stack
+      return;
+    }
+    mv.visitVarInsn(loadOpcode(type.vmType()), slot + (type.isMixed()? 1: 0));
   }
   
   @Override
@@ -85,8 +98,12 @@ public class Var extends Value {
     if (type.vmType() == Type.VM_VOID) {
       return;
     }
-    int slot = this.slot + (type.isMixed()? 1: 0); 
-    mv.visitVarInsn(storeOpcode(type.vmType()), slot);
+    int slot = this.slot;
+    if (slot == STACK_ALLOCATED) {
+      // do nothing, the result should stay on stack
+      return;
+    }
+    mv.visitVarInsn(storeOpcode(type.vmType()), slot + (type.isMixed()? 1: 0));
   }
   
   void storeAll(MethodVisitor mv) {

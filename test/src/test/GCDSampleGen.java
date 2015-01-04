@@ -59,18 +59,18 @@ public class GCDSampleGen {
         new String[] { "x", "y"});
     Var x = codeGen.parameterVar(0);
     Var y = codeGen.parameterVar(1);
-    Var a = codeGen.createVar(Types.INT_MIXED, "a");
+    Var a = codeGen.createVar(Types.INT_MIXED, "a", false);
     codeGen.move(a, x);
-    Var b = codeGen.createVar(Types.INT_MIXED, "b");
+    Var b = codeGen.createVar(Types.INT_MIXED, "b", false);
     codeGen.move(b, y);
     Label loop = new Label();
     codeGen.label(loop);
-    Var r0 = codeGen.createVar(Types.BOOL, null);
+    Var r0 = codeGen.createVar(Types.BOOL, null, false);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r0, "ne", a, b);
     Label end = new Label();
     codeGen.jumpIfFalse(r0, end);
-    Var r1 = codeGen.createVar(Types.BOOL, null);
+    Var r1 = codeGen.createVar(Types.BOOL, null, false);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r1, "gt", a, b);
     Label otherwise = new Label();

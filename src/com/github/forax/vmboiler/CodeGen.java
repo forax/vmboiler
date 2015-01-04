@@ -40,7 +40,7 @@ import com.github.forax.vmboiler.rt.RT;
  * <p>All {@link Value}s are represented either by a {@link Constant} (a side
  * effect free constant storable in the class constant pool) or by a variable {@link Var}
  * that act as a register. {@link Var Variable} unlike {@link Constant} are 
- * {@link #createVar(Type, String) created} on the current {@link CodeGen}
+ * {@link #createVar(Type, String, boolean) created} on the current {@link CodeGen}
  * and should never be used with another {@link CodeGen}.
  * 
  * <p>Operations
@@ -120,7 +120,7 @@ public final class CodeGen {
   
   private ArrayList<Var> gatherParameters(Type[] parameterTypes, String[] parameterNames) {
     return IntStream.range(0, parameterTypes.length)
-        .mapToObj(i -> createVar(parameterTypes[i], parameterNames[i]))
+        .mapToObj(i -> createVar(parameterTypes[i], parameterNames[i], false))
         .peek(var -> {
           if (var.type().isMixed()) {
             throw new IllegalArgumentException("parameter type can not be a mixed type " + var);
@@ -166,13 +166,17 @@ public final class CodeGen {
    * Create a variable attached to the current CodeGen.
    * @param type the type of the variable.
    * @param name the name of the variable or null if it's a temporary variable.
+   * @param stackAllocated true if the variable should be stack allocated
    * @return a newly created variable
    * 
    * @see VarFactory
    */
-  public Var createVar(Type type, String name) {
-    Var var = varFactory.create(type, name, slotCount);
-    slotCount += size(type.vmType()) + (type.isMixed()? 1: 0);
+  public Var createVar(Type type, String name, boolean stackAllocated) {
+    int slot = stackAllocated? Var.STACK_ALLOCATED: this.slotCount;
+    Var var = varFactory.create(type, name, slot);
+    if (!stackAllocated) {
+      slotCount += size(type.vmType()) + (type.isMixed()? 1: 0);
+    }
     return var;
   }
   

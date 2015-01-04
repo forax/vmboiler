@@ -71,26 +71,26 @@ public class FiboSampleGen {
     Constant one = new Constant(Types.INT, 1);
     Constant two = new Constant(Types.INT, 2);
     Var r1 = codeGen.parameterVar(0);
-    Var r2 = codeGen.createVar(Types.BOOL, null);
+    Var r2 = codeGen.createVar(Types.BOOL, null, false);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r2, "lt", r1, two);
     Label nextLabel = new Label();
     codeGen.jumpIfFalse(r2, nextLabel);
     codeGen.ret(one);
     codeGen.label(nextLabel);
-    Var r3 = codeGen.createVar(Types.INT_MIXED, null);
+    Var r3 = codeGen.createVar(Types.INT_MIXED, null, false);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r3, "sub", r1, one);
-    Var r4 = codeGen.createVar(Types.INT_MIXED, null);
+    Var r4 = codeGen.createVar(Types.INT_MIXED, null, false);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r4, "fibo", r3);
-    Var r5 = codeGen.createVar(Types.INT_MIXED, null);
+    Var r5 = codeGen.createVar(Types.INT_MIXED, null, false);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r5, "sub", r1, two);
-    Var r6 = codeGen.createVar(Types.INT_MIXED, null);
+    Var r6 = codeGen.createVar(Types.INT_MIXED, null, false);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r6, "fibo", r5);
-    Var r7 = codeGen.createVar(Types.INT_MIXED, null);
+    Var r7 = codeGen.createVar(Types.INT_MIXED, null, false);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r7, "add", r4, r6);
     codeGen.ret(r7);

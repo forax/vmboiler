@@ -97,7 +97,7 @@ public class Generator {
       Var parameterVar = (Var)codeGen.parameterVar(i);
       Var var;
       if (binding.type() != parameterVar.type()) {
-        var = createVar(codeGen, binding.type(), parameterVar.name(), null);
+        var = createVar(codeGen, binding.type(), parameterVar.name(), false, null);
         convert(var, parameterVar, env);
       } else {
         var = parameterVar;
@@ -111,7 +111,7 @@ public class Generator {
     if (returnType == value.type() || returnType.erase() == value.type()) {
       env.codeGen.ret(value);
     } else {
-      Var var = createVar(codeGen, returnType, null, null);
+      Var var = createVar(codeGen, returnType, null, !returnType.isMixed(), null);
       convert(var, value, env);
       env.codeGen.ret(var);
     }
@@ -150,8 +150,8 @@ public class Generator {
     }
   }
   
-  private static Var createVar(CodeGen codeGen, Type type, String name, Binding binding) {
-    Var var = (Var)codeGen.createVar(type, name);
+  private static Var createVar(CodeGen codeGen, Type type, String name, boolean stackAllocated, Binding binding) {
+    Var var = (Var)codeGen.createVar(type, name, stackAllocated);
     var.binding = binding;
     return var;
   }
@@ -212,7 +212,7 @@ public class Generator {
         Binding binding = env.bindingMap.get(varAssignment);
         Var var = env.varMap.get(binding);
         if (var == null) {
-          var = (Var)env.codeGen.createVar(binding.type(), varAssignment.name());
+          var = (Var)createVar(env.codeGen, binding.type(), varAssignment.name(), false, binding);
           env.varMap.put(binding, var);
         }
         Value value = Generator.VISITOR.call(varAssignment.expr(), env.expectedVar(var));
@@ -225,7 +225,7 @@ public class Generator {
         Value[] values = call.exprs().stream().map(expr -> Generator.VISITOR.call(expr, env.expectedVar(null))).toArray(Value[]::new);
         Binding[] bindings = Arrays.stream(values).map(value -> (value instanceof Var)? ((Var)value).binding: null).toArray(Binding[]::new);
         Var rVar = (expectedVar != null && binding.type() == expectedVar.type())? expectedVar:
-          createVar(env.codeGen, binding.type(), null, binding);
+          createVar(env.codeGen, binding.type(), null, false, binding);
         Handle bsm = call.optionalOp().map(op -> BSM_OP).orElse(BSM);
         
         // <HACK> make call to fibo explicit
@@ -245,14 +245,15 @@ public class Generator {
       })
       .when(If.class, (if_, env) -> {
         Binding binding = env.bindingMap.get(if_);
-        Value value = Generator.VISITOR.call(if_.condition(), env.expectedVar(null));
+        Var conditionVar = createVar(env.codeGen, Type.BOOL, null, true, null);
+        Value value = Generator.VISITOR.call(if_.condition(), env.expectedVar(conditionVar));
         Label label = new Label();
         Label end = new Label();
         Type type = binding.type();
         Var expectedVar = env.expectedVar;
         Var rVar = (type == Type.VOID)? null:  // no join (phi) if type is void 
             (expectedVar != null && expectedVar.type() == type)? expectedVar:
-              createVar(env.codeGen, type, null, binding);
+              createVar(env.codeGen, type, null, false, binding);
         env.codeGen.jumpIfFalse(value, label);
         Value value1 = Generator.VISITOR.call(if_.truePart(), env.expectedVar(rVar));
         if (rVar != null) {
@@ -271,7 +272,8 @@ public class Generator {
         Label end = new Label();
         Label test = new Label();
         env.codeGen.label(test);
-        Value result = Generator.VISITOR.call(while_.condition(), env.expectedVar(null));
+        Var conditionVar = createVar(env.codeGen, Type.BOOL, null, true, null);
+        Value result = Generator.VISITOR.call(while_.condition(), env.expectedVar(conditionVar));
         env.codeGen.jumpIfFalse(result, end);
         Generator.VISITOR.call(while_.body(), env.expectedVar(null));
         env.codeGen.jump(test);
