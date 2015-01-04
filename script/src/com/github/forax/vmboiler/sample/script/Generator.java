@@ -248,28 +248,34 @@ public class Generator {
         Value value = Generator.VISITOR.call(if_.condition(), env.expectedVar(null));
         Label label = new Label();
         Label end = new Label();
+        Type type = binding.type();
         Var expectedVar = env.expectedVar;
-        Var rVar = (expectedVar != null && expectedVar.type() == binding.type())? expectedVar:
-          createVar(env.codeGen, binding.type(), null, binding);
+        Var rVar = (type == Type.VOID)? null:  // no join (phi) if type is void 
+            (expectedVar != null && expectedVar.type() == type)? expectedVar:
+              createVar(env.codeGen, type, null, binding);
         env.codeGen.jumpIfFalse(value, label);
         Value value1 = Generator.VISITOR.call(if_.truePart(), env.expectedVar(rVar));
-        convert(rVar, value1, env);
+        if (rVar != null) {
+          convert(rVar, value1, env);
+        }
         env.codeGen.jump(end);
         env.codeGen.label(label);
         Value value2 = Generator.VISITOR.call(if_.falsePart(), env.expectedVar(rVar));
-        convert(rVar, value2, env);
+        if (rVar != null) {
+          convert(rVar, value2, env);
+        }
         env.codeGen.label(end);
-        return rVar;
+        return (rVar != null)? rVar: NULL;
       })
       .when(While.class, (while_, env) -> {
+        Label end = new Label();
         Label test = new Label();
-        Label loop = new Label();
-        env.codeGen.jump(test);
-        env.codeGen.label(loop);
-        Generator.VISITOR.call(while_.body(), env.expectedVar(null));
         env.codeGen.label(test);
         Value result = Generator.VISITOR.call(while_.condition(), env.expectedVar(null));
-        env.codeGen.jumpIfTrue(result, loop);
+        env.codeGen.jumpIfFalse(result, end);
+        Generator.VISITOR.call(while_.body(), env.expectedVar(null));
+        env.codeGen.jump(test);
+        env.codeGen.label(end);
         return NULL;
       })
       ;

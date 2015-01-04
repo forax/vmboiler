@@ -97,7 +97,7 @@ public class TypeInferer {
         TypeInferer.VISITOR.call(if_.condition(), env.newEnv().expectedType(Type.BOOL));
         Type type1 = TypeInferer.VISITOR.call(if_.truePart(), env.newEnv().expectedType(expectedType));
         Type type2 = TypeInferer.VISITOR.call(if_.falsePart(), env.newEnv().expectedType(expectedType));
-        Type type = Type.merge(type1, type2);
+        Type type = (expectedType == Type.VOID)? Type.VOID: Type.merge(type1, type2);
         env.bindingMap.put(if_, new Binding(type));
         return type;
       })
