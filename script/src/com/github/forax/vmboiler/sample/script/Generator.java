@@ -14,6 +14,7 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +32,7 @@ import sun.misc.Unsafe;
 import com.github.forax.vmboiler.CodeGen;
 import com.github.forax.vmboiler.Constant;
 import com.github.forax.vmboiler.Value;
+import com.github.forax.vmboiler.sample.script.Expr.Parameter;
 import com.github.forax.vmboiler.sample.script.Expr.*;
 
 @SuppressWarnings("restriction")
@@ -46,13 +48,13 @@ public class Generator {
     
     Var expectedVar;
     
-    Env(CodeGen codeGen, Linker linker, String nameAndType, ConstantPoolPatch constantPoolPatch, HashMap<Expr, Binding> bindingMap) {
+    Env(CodeGen codeGen, Linker linker, String nameAndType, ConstantPoolPatch constantPoolPatch, HashMap<Binding, Var> varMap, HashMap<Expr, Binding> bindingMap) {
       this.codeGen = codeGen;
       this.linker = linker;
       this.linkerPlaceholder = constantPoolPatch.encode(linker);
       this.nameAndType = nameAndType;
       this.constantPoolPatch = constantPoolPatch;
-      this.varMap = new HashMap<>();
+      this.varMap = varMap;
       this.bindingMap = bindingMap;
     }
     
@@ -70,10 +72,13 @@ public class Generator {
   }
   
   static class Var extends com.github.forax.vmboiler.Var {
-    Binding binding;
+    final String name;
+    final Binding binding;
 
-    Var(Type type, String name, int slot) {
-      super(type, name, slot);
+    Var(Type type, String name, Binding binding) {
+      super(type);
+      this.name = name;
+      this.binding = binding;
     }
   }
   
@@ -87,23 +92,32 @@ public class Generator {
     String desc = Arrays.stream(parameterTypes).map(Type::vmType).collect(Collectors.joining("", "(", ")"))
         + returnType.vmType();
     MethodVisitor mv = writer.visitMethod(ACC_PUBLIC|ACC_STATIC, name, desc, null, null);
-    CodeGen codeGen = new CodeGen(mv, returnType, parameterTypes, fn.parameters().stream().map(Parameter::name).toArray(String[]::new),
-        (type, n, slot) -> new Var((Type)type, n, slot));
+    CodeGen codeGen = new CodeGen(mv, returnType);
     mv.visitCode();
     
-    Env env = new Env(codeGen, linker, name + desc, constantPoolPatch, bindingMap);
-    for(int i = 0; i < codeGen.parameterCount(); i++) {
-      Binding binding = bindingMap.get(fn.parameters().get(i));
-      Var parameterVar = (Var)codeGen.parameterVar(i);
-      Var var;
-      if (binding.type() != parameterVar.type()) {
-        var = createVar(codeGen, binding.type(), parameterVar.name(), false, null);
-        convert(var, parameterVar, env);
+    HashMap<Binding, Var> varMap = new HashMap<>();
+    ArrayList<Var> mixedParameterVars = new ArrayList<>();
+    List<Parameter> parameters = fn.parameters();
+    for(int i = 0; i < parameters.size(); i++) {
+      Type parameterType = parameterTypes[i];
+      Parameter parameter = parameters.get(i);
+      Binding binding = bindingMap.get(parameter);
+      Var parameterVar = createVar(codeGen, parameterType, parameter.name(), false, binding);
+      if (binding.type() == parameterType) {
+        varMap.put(binding, parameterVar);
       } else {
-        var = parameterVar;
+        mixedParameterVars.add(parameterVar); // need a new variable with a mixed type
       }
-      var.binding = binding;
-      env.varMap.put(binding, var);
+    }
+    
+    // we need two passes here, because all parameter declarations must be done first
+    // but some parameters may have a mixed type so require a new variable
+    Env env = new Env(codeGen, linker, name + desc, constantPoolPatch, varMap, bindingMap);
+    for(Var parameterVar: mixedParameterVars) {
+      Binding binding = parameterVar.binding;
+      Var var = createVar(codeGen, binding.type(), parameterVar.name, false, binding);
+      convert(var, parameterVar, env);
+      varMap.put(binding, var);
     }
     
     Value value = VISITOR.call(fn.block(), env);
@@ -151,9 +165,10 @@ public class Generator {
   }
   
   private static Var createVar(CodeGen codeGen, Type type, String name, boolean stackAllocated, Binding binding) {
-    Var var = (Var)codeGen.createVar(type, name, stackAllocated);
-    var.binding = binding;
-    return var;
+    if (stackAllocated) {
+      return new Var(type, name, binding);
+    }
+    return codeGen.createVar(type, t -> new Var(type, name, binding));
   }
   
   private static void convert(Var var, Value value, Env env) {

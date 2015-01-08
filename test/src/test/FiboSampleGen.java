@@ -1,6 +1,6 @@
 package test;
 
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static org.objectweb.asm.Opcodes.ACC_SUPER;
 import static org.objectweb.asm.Opcodes.ALOAD;
@@ -10,7 +10,7 @@ import static org.objectweb.asm.Opcodes.H_INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 import static org.objectweb.asm.Opcodes.RETURN;
-import static org.objectweb.asm.Opcodes.V1_8;
+import static org.objectweb.asm.Opcodes.V1_7;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -65,32 +65,30 @@ public class FiboSampleGen {
     writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "FiboSample", null, "java/lang/Object", null);
     MethodVisitor mv = writer.visitMethod(ACC_PUBLIC|ACC_STATIC, "fibo", "(I)I", null, null);
     mv.visitCode();
-    CodeGen codeGen = new CodeGen(mv, Types.INT_MIXED,
-        new Type[]   { Types.INT },
-        new String[] { "n"});
+    CodeGen codeGen = new CodeGen(mv, Types.INT_MIXED);
     Constant one = new Constant(Types.INT, 1);
     Constant two = new Constant(Types.INT, 2);
-    Var r1 = codeGen.parameterVar(0);
-    Var r2 = codeGen.createVar(Types.BOOL, null, false);
+    Var r1 = codeGen.createVar(Types.INT);
+    Var r2 = codeGen.createVar(Types.BOOL);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r2, "lt", r1, two);
     Label nextLabel = new Label();
     codeGen.jumpIfFalse(r2, nextLabel);
     codeGen.ret(one);
     codeGen.label(nextLabel);
-    Var r3 = codeGen.createVar(Types.INT_MIXED, null, false);
+    Var r3 = codeGen.createVar(Types.INT_MIXED);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r3, "sub", r1, one);
-    Var r4 = codeGen.createVar(Types.INT_MIXED, null, false);
+    Var r4 = codeGen.createVar(Types.INT_MIXED);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r4, "fibo", r3);
-    Var r5 = codeGen.createVar(Types.INT_MIXED, null, false);
+    Var r5 = codeGen.createVar(Types.INT_MIXED);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r5, "sub", r1, two);
-    Var r6 = codeGen.createVar(Types.INT_MIXED, null, false);
+    Var r6 = codeGen.createVar(Types.INT_MIXED);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r6, "fibo", r5);
-    Var r7 = codeGen.createVar(Types.INT_MIXED, null, false);
+    Var r7 = codeGen.createVar(Types.INT_MIXED);
     codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
         r7, "add", r4, r6);
     codeGen.ret(r7);

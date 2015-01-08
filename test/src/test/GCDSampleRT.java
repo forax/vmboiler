@@ -31,7 +31,7 @@ public class GCDSampleRT {
     return false;
   }
   
-  public static boolean deopt_return(Object value) throws Throwable {
+  public static boolean deopt_ret(Object value) throws Throwable {
     System.out.println("deopt return " + value);
     return false;
   }

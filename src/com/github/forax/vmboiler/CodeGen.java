@@ -14,11 +14,7 @@ import static com.github.forax.vmboiler.Value.returnOpcode;
 import static com.github.forax.vmboiler.Value.size;
 import static org.objectweb.asm.Opcodes.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.function.Function;
 
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
@@ -40,7 +36,7 @@ import com.github.forax.vmboiler.rt.RT;
  * <p>All {@link Value}s are represented either by a {@link Constant} (a side
  * effect free constant storable in the class constant pool) or by a variable {@link Var}
  * that act as a register. {@link Var Variable} unlike {@link Constant} are 
- * {@link #createVar(Type, String, boolean) created} on the current {@link CodeGen}
+ * {@link #createVar(Type, Function) created} on the current {@link CodeGen}
  * and should never be used with another {@link CodeGen}.
  * 
  * <p>Operations
@@ -66,67 +62,18 @@ import com.github.forax.vmboiler.rt.RT;
  */
 public final class CodeGen {
   private final MethodVisitor mv;
-  private final VarFactory varFactory;
   private final Type returnType;
-  private final ArrayList<Var> parameters;
   private int slotCount;
   private Runnable sideExit = () -> { /* empty */ };
-  
-  /**
-   * Variables factory.
-   * 
-   * @see CodeGen#CodeGen(MethodVisitor, Type, Type[], String[], VarFactory)
-   */
-  public interface VarFactory {
-    /**
-     * Create a variable from a type, a name and a slot.
-     * @param type the type of the variable.
-     * @param name the name of the variable.
-     * @param slot the 'base' slot used by the variable.
-     * @return a newly created variable
-     */
-    public Var create(Type type, String name, int slot);
-  }
-  
-  /**
-   * Create a new CodeGen to generate code of a method.
-   * @param mv ASM method visitor.
-   * @param returnType the return type of a method.
-   * @param parameterTypes the type of the parameters of a method. 
-   * @param parameterNames the name of the parameters of a method.
-   * @param varFactory the variable factory.
-   * 
-   * @see #CodeGen(MethodVisitor, Type, Type[], String[])
-   */
-  public CodeGen(MethodVisitor mv, Type returnType, Type[] parameterTypes, String[] parameterNames, VarFactory varFactory) {
-    this.mv = mv;
-    this.varFactory = varFactory;
-    this.returnType = returnType;
-    this.parameters = gatherParameters(parameterTypes, parameterNames);
-  }
   
   /**
   * Create a new CodeGen to generate code of a method.
   * @param mv ASM method visitor.
   * @param returnType the return type of a method.
-  * @param parameterTypes the type of the parameters of a method. 
-  * @param parameterNames the name of the parameters of a method.
-  * 
-  * @see #CodeGen(MethodVisitor, Type, Type[], String[], VarFactory)
   */
-  public CodeGen(MethodVisitor mv, Type returnType, Type[] parameterTypes, String[] parameterNames) {
-    this(mv, returnType, parameterTypes, parameterNames, Var::new);
-  }
-  
-  private ArrayList<Var> gatherParameters(Type[] parameterTypes, String[] parameterNames) {
-    return IntStream.range(0, parameterTypes.length)
-        .mapToObj(i -> createVar(parameterTypes[i], parameterNames[i], false))
-        .peek(var -> {
-          if (var.type().isMixed()) {
-            throw new IllegalArgumentException("parameter type can not be a mixed type " + var);
-          }
-        })
-        .collect(Collectors.toCollection(ArrayList::new));
+  public CodeGen(MethodVisitor mv, Type returnType) {
+    this.mv = mv;
+    this.returnType = returnType;
   }
   
   /**
@@ -138,45 +85,34 @@ public final class CodeGen {
   }
   
   /**
-   * Returns the number of parameters of the current method.
-   * @return the number of parameters of the current method.
+   * Create a variable attached to the current CodeGen.
+   * This is a convenient method for
+   * <pre>
+   *  {@code createVar(type, Var::new)}
+   * </pre>
+   * 
+   * @param type the type of the variable.
+   * @return a newly created variable
+   * 
+   * @see #createVar(Type, Function)
    */
-  public int parameterCount() {
-    return parameters.size();
-  }
-  
-  /**
-   * Returns the variable corresponding to the parameter at index index.
-   * @param index index of the parameter
-   * @return the variable corresponding to the parameter at index index.
-   */
-  public Var parameterVar(int index) {
-    return parameters.get(index);
-  }
-  
-  /**
-   * Returns a list of all parameters.
-   * @return a list of all parameters.
-   */
-  public List<Var> parameterVars() {
-    return Collections.unmodifiableList(parameters);
+  public Var createVar(Type type) {
+    return createVar(type, Var::new);
   }
   
   /**
    * Create a variable attached to the current CodeGen.
-   * @param type the type of the variable.
-   * @param name the name of the variable or null if it's a temporary variable.
-   * @param stackAllocated true if the variable should be stack allocated
-   * @return a newly created variable
+   * This method first call the factory to create a variable and
+   * then assign a slot to it.
    * 
-   * @see VarFactory
+   * @param type type of the variable.
+   * @param varFactory a factory which create a variable from a type.
+   * @return a newly created variable.
    */
-  public Var createVar(Type type, String name, boolean stackAllocated) {
-    int slot = stackAllocated? Var.STACK_ALLOCATED: this.slotCount;
-    Var var = varFactory.create(type, name, slot);
-    if (!stackAllocated) {
-      slotCount += size(type.vmType()) + (type.isMixed()? 1: 0);
-    }
+  public <T extends Type, V extends Var> V createVar(T type, Function<? super T, ? extends V> varFactory) {
+    V var = varFactory.apply(type);
+    var.injectSlot(slotCount);
+    slotCount += size(type.vmType()) + (type.isMixed()? 1: 0);
     return var;
   }
   

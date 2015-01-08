@@ -12,11 +12,10 @@ import org.objectweb.asm.MethodVisitor;
  * 
  * This class can be inherited.
  * 
- * @see CodeGen.VarFactory
+ * @see CodeGen#createVar(Type, java.util.function.Function)
  */
 public class Var extends Value {
-  private final String name;  // may be null
-  private final int slot;
+  private /*almost final*/ int slot;
 
   /**
    * Marker value to indicate that the variable is stack allocated.
@@ -26,27 +25,17 @@ public class Var extends Value {
   /**
    * Initialize a variable
    * @param type the type of the variable.
-   * @param name the name of the variable or null.
-   * @param slot a slot number or STACK_ALLOCATED.
    */
-  protected Var(Type type, String name, int slot) {
+  protected Var(Type type) {
     super(type);
-    if (slot == STACK_ALLOCATED && type.isMixed()) {
-      throw new IllegalArgumentException("a stack allocated variable can not hvae a mixed type");
-    }
-    if (slot < -1) {
-      throw new IllegalArgumentException("slot must be a positive number");
-    }
-    this.name = name;
-    this.slot = slot;
+    this.slot = STACK_ALLOCATED;
   }
-
-  /**
-   * Returns the name of the current variable.
-   * @return the name of the current variable or null.
-   */
-  public String name() {
-    return name;
+  
+  void injectSlot(int slot) {
+    if (this.slot != STACK_ALLOCATED) {
+      throw new IllegalStateException("the variable already have a slot ");
+    }
+    this.slot = slot;
   }
   
   /**
@@ -61,7 +50,7 @@ public class Var extends Value {
   
   @Override
   public String toString() {
-    return "var(" + type() + " " + name + " " + slot + ')';
+    return "var(" + type() + " " + ((slot == STACK_ALLOCATED)? "stack allocated": slot) + ')';
   }
   
   @Override

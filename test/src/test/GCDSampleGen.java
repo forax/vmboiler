@@ -1,6 +1,9 @@
 package test;
 
 import static org.objectweb.asm.Opcodes.*;
+import static test.GCDSampleGen.Types.BOOL;
+import static test.GCDSampleGen.Types.INT;
+import static test.GCDSampleGen.Types.INT_MIXED;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -44,8 +47,8 @@ public class GCDSampleGen {
   private static final Handle DEOPT_ARGS = new Handle(H_INVOKESTATIC,
       GCD_SAMPLE_RT, "deopt_args",
       MethodType.methodType(boolean.class, Object[].class).toMethodDescriptorString());
-  private static final Handle DEOPT_RETURN = new Handle(H_INVOKESTATIC,
-      GCD_SAMPLE_RT, "deopt_return",
+  private static final Handle DEOPT_RET = new Handle(H_INVOKESTATIC,
+      GCD_SAMPLE_RT, "deopt_ret",
       MethodType.methodType(boolean.class, Object.class).toMethodDescriptorString());
   
   
@@ -54,32 +57,30 @@ public class GCDSampleGen {
     writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "GCDSample", null, "java/lang/Object", null);
     MethodVisitor mv = writer.visitMethod(ACC_PUBLIC|ACC_STATIC, "gcd", "(II)I", null, null);
     mv.visitCode();
-    CodeGen codeGen = new CodeGen(mv, Types.INT_MIXED,
-        new Type[]   { Types.INT, Types.INT },
-        new String[] { "x", "y"});
-    Var x = codeGen.parameterVar(0);
-    Var y = codeGen.parameterVar(1);
-    Var a = codeGen.createVar(Types.INT_MIXED, "a", false);
+    CodeGen codeGen = new CodeGen(mv, INT_MIXED);
+    Var x = codeGen.createVar(INT);
+    Var y = codeGen.createVar(INT);
+    Var a = codeGen.createVar(INT_MIXED);
     codeGen.move(a, x);
-    Var b = codeGen.createVar(Types.INT_MIXED, "b", false);
+    Var b = codeGen.createVar(INT_MIXED);
     codeGen.move(b, y);
     Label loop = new Label();
     codeGen.label(loop);
-    Var r0 = codeGen.createVar(Types.BOOL, null, false);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    Var r0 = codeGen.createVar(BOOL);
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET,
         r0, "ne", a, b);
     Label end = new Label();
     codeGen.jumpIfFalse(r0, end);
-    Var r1 = codeGen.createVar(Types.BOOL, null, false);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    Var r1 = codeGen.createVar(BOOL);
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET,
         r1, "gt", a, b);
     Label otherwise = new Label();
     codeGen.jumpIfFalse(r1, otherwise);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET,
         a, "sub", a, b);
     codeGen.jump(loop);
     codeGen.label(otherwise);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET,
         b, "sub", b, a);
     codeGen.jump(loop);
     codeGen.label(end);
