@@ -67,20 +67,20 @@ public class GCDSampleGen {
     Label loop = new Label();
     codeGen.label(loop);
     Var r0 = codeGen.createVar(BOOL);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         r0, "ne", a, b);
     Label end = new Label();
     codeGen.jumpIfFalse(r0, end);
     Var r1 = codeGen.createVar(BOOL);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         r1, "gt", a, b);
     Label otherwise = new Label();
     codeGen.jumpIfFalse(r1, otherwise);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         a, "sub", a, b);
     codeGen.jump(loop);
     codeGen.label(otherwise);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         b, "sub", b, a);
     codeGen.jump(loop);
     codeGen.label(end);

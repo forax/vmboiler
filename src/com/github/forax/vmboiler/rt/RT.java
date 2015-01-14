@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.MutableCallSite;
 import java.lang.invoke.WrongMethodTypeException;
+import java.util.Arrays;
 
 /**
  * The runtime support that handle the dynamic part of the deoptimization.
@@ -15,42 +16,56 @@ import java.lang.invoke.WrongMethodTypeException;
  */
 public final class RT {
   /**
-   * ootstrap method called called in a deoptimisation path when at least one argument
+   * Bootstrap method called called in a deoptimisation path when at least one argument
    * doesn't fit in its parameter type.
    * 
    * @param lookup lookup object
    * @param name name of the virtual method
    * @param methodType descriptor of the virtual method
-   * @param array parameters that begins with the 3 following objects
-   *        a bootstrap method as method handle,
-   *        the deopt callback for arguments as a method handle,
-   *        an array encoding if arguments are mixed ('M') or not ('.')
-   *        and ends with the boostrap arguments. 
+   * @param array parameters that begins with the 4 objects followed by two arrays
+   *    <pre>
+   *        a string encoding if an argument is mixed ('M') or not ('.')
+   *        a bootstrap method as method handle with signature (Lookup,String,MethodType, ...)CallSite,
+   *        the number of constant arguments of the bootstrap method
+   *        a deopt callback as a method handle with signature (Object[], ...)boolean
+   *        the bootstrap constant arguments of the bsm as an array of objects flattened
+   *        the deopt callback constant arguments as an array of objects flattened
+   *    </pre>
    * @return a callsite
    * @throws Throwable if an exception occurs
    */
   //called by generated code
   public static CallSite bsm(Lookup lookup, String name, MethodType methodType, Object... array) throws Throwable {
-    MethodHandle bsm = (MethodHandle)array[0];
-    MethodHandle deoptArgCallback = (MethodHandle)array[1];     // boolean mh(Object[] values)
-    String mixed = (String)array[2];
+    // decode all arguments
+    String mixed = (String)array[0];
+    MethodHandle bsm = (MethodHandle)array[1];
+    int bsmContstantCount = (int)array[2];
+    MethodHandle deoptArgs = (MethodHandle)array[3];     // boolean mh(Object[], ...)
     
-    //System.out.println("bsm " + name + " with " + bsm + " " + deoptArgCallback  + " " + mixed);
-    
-    // do some checks
-    if (!deoptArgCallback.type().equals(MethodType.methodType(boolean.class, Object[].class))) {
-      throw new WrongMethodTypeException("invalid deop callback signature ! " + deoptArgCallback.type());
-    }
+    System.out.println("bootstrap: " + name + '(' + mixed + ") with " + bsm + "/" + bsmContstantCount + " " + deoptArgs);
     
     // call the bsm
-    array[0] = lookup;
-    array[1] = name;
-    array[2] = decodeMixedMethodType(mixed, methodType);
-    CallSite callSite = (CallSite)bsm.invokeWithArguments(array);
+    Object[] arguments = new Object[3 + bsmContstantCount];
+    arguments[0] = lookup;
+    arguments[1] = name;
+    arguments[2] = decodeMixedMethodType(mixed, methodType);
+    if (bsmContstantCount != 0) {
+      System.arraycopy(array, 4, arguments, 3, bsmContstantCount);
+    }
+    CallSite callSite = (CallSite)bsm.invokeWithArguments(arguments);
+    
+    // bundle deoptArgs constant arguments with deoptArgs if necessary
+    if (array.length != 4 + bsmContstantCount) {
+      Object[] deoptArgsCsts = Arrays.copyOfRange(array, 4  + bsmContstantCount, array.length);
+      
+      //FIXME check that deoptArgs as the right number of arguments
+      //FIXME should we support varargs ?
+      deoptArgs = MethodHandles.insertArguments(deoptArgs, 1, deoptArgsCsts.length);
+    }
     
     MethodHandle target = callSite.dynamicInvoker();
     target = target.asSpreader(Object[].class, mixed.length());
-    target = deoptCallback(target, deoptArgCallback);
+    target = deoptCallback(target, deoptArgs);
     target = MethodHandles.filterReturnValue(DECODE_MIXED_VALUES.bindTo(mixed), target);
     target = target.asCollector(Object[].class, methodType.parameterCount());
     target = target.asType(methodType);
@@ -65,22 +80,28 @@ public final class RT {
    * @param lookup the lookup object.
    * @param name the name of the method
    * @param methodType always (Object)OptimisiticError
-   * @param deoptReturnCallback the callback to cause to indicate a deopt error.
+   * @param deoptRet the callback to cause to indicate a deopt error.
+   * @param deoptRetCsts the constant arguments of deoptRet
    * @return a call site
    * @throws Throwable if an error occurs
    */
   // called by generated code
-  public static CallSite bsm_optimistic_failure(Lookup lookup, String name, MethodType methodType, MethodHandle deoptReturnCallback) throws Throwable {
-    //System.out.println("bsm_optimistic_failure " +  name + " with " + deoptReturnCallback);
+  public static CallSite bsm_optimistic_failure(Lookup lookup, String name, MethodType methodType, MethodHandle deoptRet, Object... deoptRetCsts) throws Throwable {
+    System.out.println("bsm_optimistic_failure " +  name + " with " + deoptRet + "/" + deoptRetCsts.length);
     
     // do some checks
-    if (!deoptReturnCallback.type().equals(MethodType.methodType(boolean.class, Object.class))) {
-      throw new WrongMethodTypeException("invalid deop callback signature ! " + deoptReturnCallback.type());
+    //if (!deoptRet.type().equals(MethodType.methodType(boolean.class, Object.class))) {
+    //  throw new WrongMethodTypeException("invalid deop callback signature ! " + deoptRet.type());
+    //}
+    
+    // bundle deoptRet constant arguments with deoptRet if necessary
+    if (deoptRetCsts.length != 0) {
+      MethodHandles.insertArguments(deoptRet, 1, deoptRetCsts);
     }
     
     return new ConstantCallSite(
         MethodHandles.filterReturnValue(OPTIMISTIC_ERROR_VALUE,
-            deoptCallback(MethodHandles.identity(Object.class), deoptReturnCallback)));
+            deoptCallback(MethodHandles.identity(Object.class), deoptRet)));
   }
   
   

@@ -55,7 +55,7 @@ public class FiboSampleGen {
   private static final Handle DEOPT_ARGS = new Handle(H_INVOKESTATIC,
       FIBO_SAMPLE_RT, "deopt_args",
       MethodType.methodType(boolean.class, Object[].class).toMethodDescriptorString());
-  private static final Handle DEOPT_RETURN = new Handle(H_INVOKESTATIC,
+  private static final Handle DEOPT_RET = new Handle(H_INVOKESTATIC,
       FIBO_SAMPLE_RT, "deopt_return",
       MethodType.methodType(boolean.class, Object.class).toMethodDescriptorString());
   
@@ -70,26 +70,26 @@ public class FiboSampleGen {
     Constant two = new Constant(Types.INT, 2);
     Var r1 = codeGen.createVar(Types.INT);
     Var r2 = codeGen.createVar(Types.BOOL);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         r2, "lt", r1, two);
     Label nextLabel = new Label();
     codeGen.jumpIfFalse(r2, nextLabel);
     codeGen.ret(one);
     codeGen.label(nextLabel);
     Var r3 = codeGen.createVar(Types.INT_MIXED);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         r3, "sub", r1, one);
     Var r4 = codeGen.createVar(Types.INT_MIXED);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         r4, "fibo", r3);
     Var r5 = codeGen.createVar(Types.INT_MIXED);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         r5, "sub", r1, two);
     Var r6 = codeGen.createVar(Types.INT_MIXED);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         r6, "fibo", r5);
     Var r7 = codeGen.createVar(Types.INT_MIXED);
-    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RETURN,
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, EMPTY_ARRAY,
         r7, "add", r4, r6);
     codeGen.ret(r7);
     codeGen.end();

@@ -41,7 +41,7 @@ import com.github.forax.vmboiler.rt.RT;
  * 
  * <p>Operations
  * <p>There are only 8 operations (instructions) to define the semantics of your language,
- * <p>{@link #call(Handle, Object[], Object, Object, Var, String, Value...)} emit an invokedynamic
+ * <p>{@link #call(Handle, Object[], Object, Object, Object[], Var, String, Value...)} emit an invokedynamic
  * with the some values as arguments and an variable as register for the return type.
  * The first two arguments are the bootstrap method and the bootstrap arguments,
  * the 3rd and the 4th arguments are some two method handles, the first one will be called
@@ -148,17 +148,19 @@ public final class CodeGen {
    * can not store the value of the register.
    * 
    * @param bsm the bootstrap method used to resolved the call.
-   * @param bsmArgs the bootstrap arguments passed to the bootstrap method.
-   * @param deoptArgsCallback a method handle as a String or a {@link Handle}
+   * @param bsmCsts the bootstrap constant arguments passed to the bootstrap method.
+   * @param deoptArgs a method handle as a String or a {@link Handle}
    *        that will be called if at least one argument doesn't match its declared type. 
-   * @param deoptReturnCallback a method handle as a String or a {@link Handle}
+   * @param deoptRet a method handle as a String or a {@link Handle}
    *        that will be called if return value doesn't match its declared type
+   * @param deoptCsts constants arguments sent as arguments of deopt methods
    * @param result the variable that will contains the result value
    *        (this variable can have a {@link Type#vmType()} equals to {@link Type#VM_VOID}).
    * @param name the name of the 'virtual method'.
    * @param values the arguments of the call.
    */
-  public void call(Handle bsm, Object[] bsmArgs, Object deoptArgsCallback, Object deoptReturnCallback,
+  public void call(Handle bsm, Object[] bsmCsts,
+      Object deoptArgs, Object deoptRet, Object[] deoptCsts,
       Var result, String name, Value... values) {
     MethodVisitor mv = this.mv;
     Label label = null;
@@ -189,7 +191,7 @@ public final class CodeGen {
       mv.visitTryCatchBlock(start, end, handler, OPTIMISTIC_ERROR);
       mv.visitLabel(start);
     }
-    mv.visitInvokeDynamicInsn(name, desc.toString(), bsm, bsmArgs);
+    mv.visitInvokeDynamicInsn(name, desc.toString(), bsm, bsmCsts);
     if (mixed) {
       mv.visitLabel(end);
       result.storePrimitive(mv);
@@ -200,7 +202,7 @@ public final class CodeGen {
         previousSideExit.run();
         mv.visitLabel(handler);
         mv.visitInvokeDynamicInsn(name, "(L" + OPTIMISTIC_ERROR + ";)Ljava/lang/Object;",
-            BSM_OPTIMISTIC_FAILURE, deoptReturnCallback);
+            BSM_OPTIMISTIC_FAILURE, concat(deoptRet, deoptCsts));
         mv.visitVarInsn(ASTORE, result.slot());
         loadZero(mv, result.type());
         result.storePrimitive(mv);
@@ -213,12 +215,12 @@ public final class CodeGen {
     mv.visitLabel(sideExitBackLabel);
     
     if (label != null) {
-      callDeopt(label, sideExitBackLabel, handler, bsm, bsmArgs, deoptArgsCallback, result, name, values);
+      callDeopt(label, sideExitBackLabel, handler, bsm, bsmCsts, deoptArgs, deoptCsts, result, name, values);
     }
   }
   
   private void callDeopt(Label sideExitStart, Label sideExitBackLabel, Label handler,
-      Handle bsm, Object[] bsmArgs, Object deoptArgsCallback,
+      Handle bsm, Object[] bsmCsts, Object deoptArgs, Object[] deoptCsts,
       Var result, String name, Value[] values) {
     MethodVisitor mv = this.mv;
     Runnable previousSideExit = sideExit;
@@ -247,7 +249,7 @@ public final class CodeGen {
         mv.visitLabel(start);
       }
       mv.visitInvokeDynamicInsn(name, desc2.toString(), BSM,
-          prepend(bsmArgs, bsm, deoptArgsCallback, mixedDesc.toString()));
+          concat(mixedDesc.toString(), bsm, bsmCsts.length, deoptArgs, bsmCsts, deoptCsts));
       if (mixed) {
         mv.visitLabel(end);
         result.storePrimitive(mv);
@@ -260,13 +262,22 @@ public final class CodeGen {
     };
   }
 
-  private static Object[] prepend(Object[] array, Object o1, Object o2, Object o3) {
+  private static Object[] concat(Object o, Object[] array) {
     int length = array.length;
-    Object[] newArray = new Object[length + 3];
+    Object[] newArray = new Object[length + 1];
+    newArray[0] = o;
+    System.arraycopy(array, 0, newArray, 1, length);
+    return newArray;
+  }
+  
+  private static Object[] concat(Object o1, Object o2, Object o3, Object o4, Object[] array1, Object[] array2) {
+    Object[] newArray = new Object[array1.length + array2.length + 4];
     newArray[0] = o1;
     newArray[1] = o2;
     newArray[2] = o3;
-    System.arraycopy(array, 0, newArray, 3, length);
+    newArray[3] = o4;
+    System.arraycopy(array1, 0, newArray, 4, array1.length);
+    System.arraycopy(array2, 0, newArray, 4 + array1.length, array2.length);
     return newArray;
   }
   
@@ -370,7 +381,7 @@ public final class CodeGen {
    */
   public void end() {
     sideExit.run();
-    sideExit = () -> { /* empty */};
+    sideExit = () -> { /* empty */ };
   }
   
   private static final String RT = RT.class.getName().replace('.', '/');
@@ -378,7 +389,7 @@ public final class CodeGen {
   private static final Handle BSM = new Handle(H_INVOKESTATIC, RT, "bsm",
       "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;");
   private static final Handle BSM_OPTIMISTIC_FAILURE = new Handle(H_INVOKESTATIC, RT, "bsm_optimistic_failure",
-      "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;)Ljava/lang/invoke/CallSite;");
+      "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;");
   
   private static void newOptimisticError(MethodVisitor mv) {
     mv.visitMethodInsn(INVOKESTATIC, OPTIMISTIC_ERROR, "newOptimisticError",

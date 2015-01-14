@@ -182,6 +182,7 @@ public class Generator {
       env.codeGen.call(BSM_CONVERT, EMPTY_ARRAY,
           env.encodeDeopt(RT.DEOPT_ARGS, bindings),
           env.encodeDeopt(RT.DEOPT_RETURN, var.binding),
+          EMPTY_ARRAY,
           var, "convert", value);
     }
   }
@@ -254,7 +255,10 @@ public class Generator {
         }*/
         // </HACK>
         
-        env.codeGen.call(bsm, new Object[] { env.linkerPlaceholder }, env.encodeDeopt(RT.DEOPT_ARGS, bindings), env.encodeDeopt(RT.DEOPT_RETURN, binding),
+        env.codeGen.call(bsm, new Object[] { env.linkerPlaceholder },
+            env.encodeDeopt(RT.DEOPT_ARGS, bindings),
+            env.encodeDeopt(RT.DEOPT_RETURN, binding),
+            EMPTY_ARRAY,
             rVar, call.name(), values);
         return rVar;
       })
