@@ -9,6 +9,7 @@ FAQ
 ===
 
 How it works ?
+---
 The boiler provides only 8 operations and ask the runtime developer
 to map the language semantics to these operations.
 There is only 8 operations because all method call, field access, conversion, etc,
@@ -36,6 +37,7 @@ and inside a exception handler, the stack is lost so instead of trying to
 reconstruct the stack, it's easier to consider that there is no stack.
 
 Can you compare it to the way Nashorn do deoptimization ?
+---
 Nashorn do deoptimization by continuation, i.e. for every points where
 a deoptimization can occur it stores all the variables that will be
 necessary to restart and the AST node then when a deopt occur,
@@ -47,6 +49,7 @@ While one can try to make the AST and the analysis independent from a language s
 it's harder than just let the VM do the deoptimization.
 
 Can you compare it to the way Graal/Truffle do deoptimization ?
+---
 Truffle use a modified Hotspot runtime and its own JIT (Graal).
 The idea is that the runtime deveoper write an interpreter with hints
 that helps the partial evaluation done by Graal to generate an
