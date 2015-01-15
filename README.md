@@ -25,6 +25,7 @@ and change the corresponding type profile and then invalidate the code and re-ge
 a new one using the updated profile.
 
 Why it's not awfully slow ?
+---
 The idea is to generate more code than the equivalent code in Java but
 in a way that JITs can easily optimized in order to generate an assembly
 code that is really close to the code generated for the equivalent code in Java.
