@@ -1,9 +1,9 @@
 package test;
 
 import static org.objectweb.asm.Opcodes.*;
-import static test.GCDSampleGen.Types.BOOL;
-import static test.GCDSampleGen.Types.INT;
-import static test.GCDSampleGen.Types.INT_MIXED;
+import static test.GCDGen.Types.BOOL;
+import static test.GCDGen.Types.INT;
+import static test.GCDGen.Types.INT_MIXED;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,7 +24,7 @@ import com.github.forax.vmboiler.CodeGen;
 import com.github.forax.vmboiler.Type;
 import com.github.forax.vmboiler.Var;
 
-public class GCDSampleGen {
+public class GCDGen {
   public enum Types implements Type {
     INT, INT_MIXED, BOOL
     ;
@@ -40,21 +40,21 @@ public class GCDSampleGen {
   
   private static final Object[] EMPTY_ARRAY = new Object[0];
   
-  private static final String GCD_SAMPLE_RT = GCDSampleRT.class.getName().replace('.', '/');
+  private static final String GCD_RT = RT.class.getName().replace('.', '/');
   private static final Handle BSM = new Handle(H_INVOKESTATIC,
-      GCD_SAMPLE_RT, "bsm",
+      GCD_RT, "bsm",
       MethodType.methodType(CallSite.class, Lookup.class, String.class, MethodType.class).toMethodDescriptorString());
   private static final Handle DEOPT_ARGS = new Handle(H_INVOKESTATIC,
-      GCD_SAMPLE_RT, "deopt_args",
+      GCD_RT, "deopt_args",
       MethodType.methodType(boolean.class, Object[].class).toMethodDescriptorString());
   private static final Handle DEOPT_RET = new Handle(H_INVOKESTATIC,
-      GCD_SAMPLE_RT, "deopt_ret",
+      GCD_RT, "deopt_ret",
       MethodType.methodType(boolean.class, Object.class).toMethodDescriptorString());
   
   
   public static void main(String[] args) throws IOException {
     ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
-    writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "GCDSample", null, "java/lang/Object", null);
+    writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "GCD", null, "java/lang/Object", null);
     MethodVisitor mv = writer.visitMethod(ACC_PUBLIC|ACC_STATIC, "gcd", "(II)I", null, null);
     mv.visitCode();
     CodeGen codeGen = new CodeGen(mv, INT_MIXED);
@@ -109,6 +109,6 @@ public class GCDSampleGen {
     ClassReader reader = new ClassReader(array);
     CheckClassAdapter.verify(reader, true, new PrintWriter(System.out));
     
-    Files.write(Paths.get("GCDSample.class"), array);
+    Files.write(Paths.get("GCD.class"), array);
   }
 }

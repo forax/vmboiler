@@ -11,7 +11,7 @@ import java.util.Arrays;
 import com.github.forax.vmboiler.rt.OptimisticError;
 
 @SuppressWarnings("unused")
-public class FiboSampleRT {
+public class FiboRT {
   private static int add(int a, int b) {
     throw OptimisticError.newOptimisticError(a + b);
     //return a + b;
@@ -27,7 +27,7 @@ public class FiboSampleRT {
   }
   
   public static CallSite bsm(Lookup lookup, String name, MethodType methodType) throws Throwable {
-    //System.out.println("FiboSampleRT.bsm " + lookup + " " + name + methodType);
+    //System.out.println("FiboRT.bsm " + lookup + " " + name + methodType);
     Lookup l = (name.equals("fibo"))? lookup: MethodHandles.lookup();
     MethodHandle target = l.findStatic(l.lookupClass(), name, methodType);
     return new ConstantCallSite(target);

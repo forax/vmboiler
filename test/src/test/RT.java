@@ -9,7 +9,7 @@ import java.lang.invoke.MethodType;
 import java.util.Arrays;
 
 @SuppressWarnings("unused")
-public class GCDSampleRT {
+public class RT {
   private static int sub(int a, int b) {
     return a - b;
   }
@@ -21,8 +21,8 @@ public class GCDSampleRT {
   }
   
   public static CallSite bsm(Lookup lookup, String name, MethodType methodType) throws Throwable {
-    System.out.println("GCDSampleRT.bsm " + lookup + " " + name + methodType);
-    MethodHandle target = MethodHandles.lookup().findStatic(GCDSampleRT.class, name, methodType);
+    System.out.println("GCDRT.bsm " + lookup + " " + name + methodType);
+    MethodHandle target = MethodHandles.lookup().findStatic(RT.class, name, methodType);
     return new ConstantCallSite(target);
   }
   

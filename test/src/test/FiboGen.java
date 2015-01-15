@@ -32,7 +32,7 @@ import com.github.forax.vmboiler.Constant;
 import com.github.forax.vmboiler.Type;
 import com.github.forax.vmboiler.Var;
 
-public class FiboSampleGen {
+public class FiboGen {
   public enum Types implements Type {
     INT, INT_MIXED, BOOL
     ;
@@ -48,21 +48,21 @@ public class FiboSampleGen {
   
   private static final Object[] EMPTY_ARRAY = new Object[0];
   
-  private static final String FIBO_SAMPLE_RT = FiboSampleRT.class.getName().replace('.', '/');
+  private static final String FIBO_RT = FiboRT.class.getName().replace('.', '/');
   private static final Handle BSM = new Handle(H_INVOKESTATIC,
-      FIBO_SAMPLE_RT, "bsm",
+      FIBO_RT, "bsm",
       MethodType.methodType(CallSite.class, Lookup.class, String.class, MethodType.class).toMethodDescriptorString());
   private static final Handle DEOPT_ARGS = new Handle(H_INVOKESTATIC,
-      FIBO_SAMPLE_RT, "deopt_args",
+      FIBO_RT, "deopt_args",
       MethodType.methodType(boolean.class, Object[].class).toMethodDescriptorString());
   private static final Handle DEOPT_RET = new Handle(H_INVOKESTATIC,
-      FIBO_SAMPLE_RT, "deopt_return",
+      FIBO_RT, "deopt_return",
       MethodType.methodType(boolean.class, Object.class).toMethodDescriptorString());
   
   
   public static void main(String[] args) throws IOException {
     ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
-    writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "FiboSample", null, "java/lang/Object", null);
+    writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "Fibo", null, "java/lang/Object", null);
     MethodVisitor mv = writer.visitMethod(ACC_PUBLIC|ACC_STATIC, "fibo", "(I)I", null, null);
     mv.visitCode();
     CodeGen codeGen = new CodeGen(mv, Types.INT_MIXED);
@@ -134,6 +134,6 @@ public class FiboSampleGen {
     ClassReader reader = new ClassReader(array);
     CheckClassAdapter.verify(reader, true, new PrintWriter(System.out));
     
-    Files.write(Paths.get("FiboSample.class"), array);
+    Files.write(Paths.get("Fibo.class"), array);
   }
 }
