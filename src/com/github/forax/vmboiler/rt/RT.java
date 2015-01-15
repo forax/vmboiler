@@ -38,28 +38,31 @@ public final class RT {
     // decode all arguments
     String mixed = (String)array[0];
     MethodHandle bsm = (MethodHandle)array[1];
-    int bsmContstantCount = (int)array[2];
+    int bsmConstantCount = (int)array[2];
     MethodHandle deoptArgs = (MethodHandle)array[3];     // boolean mh(Object[], ...)
     
-    System.out.println("bootstrap: " + name + '(' + mixed + ") with " + bsm + "/" + bsmContstantCount + " " + deoptArgs);
+    System.out.println("bootstrap: " + name + '(' + mixed + ") with " + bsm + "/" + bsmConstantCount + " " + deoptArgs);
     
     // call the bsm
-    Object[] arguments = new Object[3 + bsmContstantCount];
+    Object[] arguments = new Object[3 + bsmConstantCount];
     arguments[0] = lookup;
     arguments[1] = name;
     arguments[2] = decodeMixedMethodType(mixed, methodType);
-    if (bsmContstantCount != 0) {
-      System.arraycopy(array, 4, arguments, 3, bsmContstantCount);
+    if (bsmConstantCount != 0) {
+      System.arraycopy(array, 4, arguments, 3, bsmConstantCount);
     }
     CallSite callSite = (CallSite)bsm.invokeWithArguments(arguments);
     
     // bundle deoptArgs constant arguments with deoptArgs if necessary
-    if (array.length != 4 + bsmContstantCount) {
-      Object[] deoptArgsCsts = Arrays.copyOfRange(array, 4  + bsmContstantCount, array.length);
+    if (array.length != 4 + bsmConstantCount) {
+      Object[] deoptArgsCsts = Arrays.copyOfRange(array, 4  + bsmConstantCount, array.length);
       
       //FIXME check that deoptArgs as the right number of arguments
       //FIXME should we support varargs ?
-      deoptArgs = MethodHandles.insertArguments(deoptArgs, 1, deoptArgsCsts.length);
+      
+      System.out.println("deopt cst args " + deoptArgs + " " + Arrays.toString(deoptArgsCsts));
+      
+      deoptArgs = MethodHandles.insertArguments(deoptArgs, 1, deoptArgsCsts);
     }
     
     MethodHandle target = callSite.dynamicInvoker();
@@ -95,7 +98,7 @@ public final class RT {
     
     // bundle deoptRet constant arguments with deoptRet if necessary
     if (deoptRetCsts.length != 0) {
-      MethodHandles.insertArguments(deoptRet, 1, deoptRetCsts);
+      deoptRet = MethodHandles.insertArguments(deoptRet, 1, deoptRetCsts);
     }
     
     return new ConstantCallSite(
