@@ -51,14 +51,14 @@ it's harder than just let the VM do the deoptimization.
 
 Can you compare it to the way Graal/Truffle do deoptimization ?
 ---
-Truffle use a modified Hotspot runtime and its own JIT (Graal).
-The idea is that the runtime deveoper write an interpreter with hints
+Truffle uses a modified Hotspot runtime and its own JIT (Graal).
+The idea is that a runtime developer write an interpreter with hints
 that helps the partial evaluation done by Graal to generate an
 heavily optimized assembly code with the same semantics than the interpreter.
-The boiler is a generator, not an interpreter so the code specialization
+The boiler is a code generator, not an interpreter so the code specialization
 can be done when generating instead of as a separate pass at compile time
 like Truffle-SOM does. The boiler uses invokedynamic to get the values
 of the stack frame instead of asking Hotspot these values so it works
-great all Java VM that have a decent JIT but will not provide agressive
+great on all Java VMs that have a decent JIT but will not provide agressive
 optimisations as Truffle can do because it doesn't seat on top of Graal.   
 
