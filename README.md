@@ -34,7 +34,7 @@ code that is really close to the code generated for the equivalent code in Java.
 Why the API is register based an not stack based like the Java bytecode ?
 ---
 De-optimization is triggered by throwing an exception (OptimisticError)
-and inside a exception handler, the stack is lost so instead of trying to
+and inside an exception handler, the stack is lost so instead of trying to
 reconstruct the stack, it's easier to consider that there is no stack.
 
 Can you compare it to the way Nashorn do deoptimization ?
