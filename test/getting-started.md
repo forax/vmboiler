@@ -1,15 +1,7 @@
-vmboiler
-========
-
-A small library on top of ASM that generates optimistically typed bytecodes that aim
-to ease the implementation of fast dynamically typed language runtime on top of the JVM.
-
-
 Getting Started
 ===
 
-Intro
----
+###Intro
 
 Let say i want to implement a function that add 1 to a value,
 By example, if I want to implement it in Ruby, I will write something like this
@@ -24,13 +16,13 @@ on 32/64 bits (Fixnum) into an infinite big number (Bignum) automatically.
 
 ```ruby
 result = addOne(1)
-puts result.is_a? Fixnum             # true
+puts result.is_a? Fixnum            # true
 
-FIXNUM_MAX = (2 ** (0.size * 8 - 2) - 1)
-puts FIXNUM_MAX.is_a? Fixnum         # true
+MAX = (2 ** (0.size * 8 - 2) - 1)
+puts MAX.is_a? Fixnum               # true
 
 result2 = addOne(FIXNUM_MAX)
-puts result2.is_a? Fixnum            # false
+puts result2.is_a? Fixnum           # false
 ```
 
 Now say that i want to implement Ruby on the JVM,
@@ -69,7 +61,8 @@ static int addOne(int x) {
 ```
 
 addOne() returns an int so in the general case, there is no boxing,
-and if there is an overflow, we use an exception (named OptimisticError)
+and if there is an overflow, we use an exception
+(named [OptimisticError](../src/com/github/forax/vmboiler/rt/OptimisticError.java))
 to indicate that the returned value can not be stored in the return type.
 
 Things get a little more complex when trying to call the method addOne,
@@ -182,16 +175,18 @@ generator to handle the code that deal with
 the exception OptimisticError.
 
 
-How to use the vm boiler
----
+### How to use the vm boiler ?
 
 First, you need to declare the types of your languages and
 how they are mapped to the Java VM type.
 
-The boiler ask you to implement an interface Type
+The boiler ask you to implement an interface
+[Type](../src/com/github/forax/vmboiler/Type.java)
 with two methods isMixed and vmType.
-isMixed indicated if a compound type composed of a primitive type
-and an object type.
+* isMixed indicates if a compound type composed of a primitive type
+  and an object type.
+* vmType returns the corresponding Java VM type or the primitive part
+  if the type is mixed.
 
 Here is the declaration of the types for our example 
 ```java
@@ -211,8 +206,9 @@ Here is the declaration of the types for our example
 
 After that, the CodeGen object allow you to generate code
 using constants and variables in a register based fashion.
-First, the CodeGen takes a ASM MethodVisitor as parameter
-and the function return type. Here, the return type is
+First, the CodeGen takes a [ASM](http://asm.ow2.org/)
+MethodVisitor] as parameter and the function return type.
+Here, the return type is
 INT_MIXED because it can be either an 32bits int or
 something that should be boxed into an object.
 Then the code declare a variable 'x' of type INT which is
@@ -242,7 +238,8 @@ returned as return value of the function.
 Now, we need to add the call to the operator '+',
 because the semantics of '+' depends on the semantics
 of the dynamic language, the boiler rely on the JVM instruction
-invokedynamic to do the linking at runtime between the call of
+[invokedynamic](https://docs.oracle.com/javase/8/docs/api/java/lang/invoke/package-summary.html)
+to do the linking at runtime between the call of
 the operation and the code of the operation.
 So codeGen.call that emit a call takes 5 parameters that explain
 how to find the code of '+' at runtime and 4 regular parameters,
@@ -309,69 +306,9 @@ is the addition of primitive ints or not.
 Get a method pointer (a method handle) to the implementation
 and if the implementation may return an object and requested return type
 is an int, check at runtime if the return value if a small int or a big int.
+The deoptimisation methods will just print a debug message.
 
-In this example, the deoptimisation methods will just print a debug message.
+You can play with the full code of the [Example](src/test/Example.java) and
+its runtime support [ExamplerRT](src/test/ExampleRT.java)
+by commenting/uncommenting the first lines of the main.
 
-```java
-  private static int add(int a, int b) {
-    try {
-      return Math.addExact(a, b);
-    } catch(ArithmeticException e) {
-      throw OptimisticError.newOptimisticError(add((Object)a, b));
-    }
-  }
-  private static Object add(Object a, Object b) {
-    return asBigInt(a).add(asBigInt(b));
-  }
-
-  public static CallSite bsm(Lookup lookup, String name, MethodType methodType) throws Throwable {
-    System.out.println("Example.bsm " + lookup + " " + name + methodType);
-    boolean exactMatch = methodType.returnType() == int.class &&
-                         methodType.parameterType(0) == int.class &&
-                         methodType.parameterType(1) == int.class;
-    MethodType lookupType;
-    MethodHandle target = MethodHandles.lookup().findStatic(ExampleRT.class, name, exactMatch?methodType: methodType.generic());
-    if (!exactMatch && methodType.returnType() == int.class) {
-      target = MethodHandles.filterReturnValue(target, CONVERT).asType(methodType);
-    }
-    return new ConstantCallSite(target.asType(methodType));
-  }
-
-  
-  private static BigInteger asBigInt(Object o) {
-    if (o instanceof Integer) {
-      return BigInteger.valueOf((Integer)o);
-    }
-    return (BigInteger)o;
-  }
-  
-  private static int convert(Object result) {
-    if (result instanceof BigInteger) {
-      throw OptimisticError.newOptimisticError(result);
-    }
-    return (Integer)result;
-  }
-  
-  public static boolean deopt_args(Object[] values, String parameterNames) throws Throwable {
-    System.out.println("deopt args " + parameterNames + " " + Arrays.toString(values));
-    return false;
-  }
-  
-  public static boolean deopt_ret(Object value, String parameterNames) throws Throwable {
-    System.out.println("deopt return " + value);
-    return false;
-  }
-  
-  private static final MethodHandle CONVERT;
-  static {
-    try {
-      CONVERT = MethodHandles.lookup().findStatic(ExampleRT.class, "convert", MethodType.methodType(int.class, Object.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
-      throw new AssertionError(e);
-    }
-  }
-```
-
-The full example is available here
-  
-you can play with it by commenting or not the line in the main.
