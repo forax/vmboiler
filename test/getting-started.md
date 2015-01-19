@@ -150,7 +150,7 @@ static int addTwo(int x) {
 
 You may think that this code will never be fast, given
 the size of the bytecode required but you will be wrong because
-this code is highly optimizable because even a simple JIT do
+this code is highly optimizable because even simple JITs do
 constant propagation and catch/branch profiling.
 
 So for the JIT, given that for the first catch block will
