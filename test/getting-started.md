@@ -208,13 +208,14 @@ After that, the CodeGen object allow you to generate code
 using constants and variables in a register based fashion.
 First, the CodeGen takes a [ASM](http://asm.ow2.org/)
 MethodVisitor] as parameter and the function return type.
-Here, the return type is
-INT_MIXED because it can be either an 32bits int or
-something that should be boxed into an object.
-Then the code declare a variable 'x' of type INT which is
-the parameter of the function. It create a constant '1'.
-Constants are constant for the JVM thus the value must be
-mapped to a JVM type exactly, the value can not be changed. 
+Here, the return type is INT_MIXED because it can be either
+a 32 bits int or something that should be boxed into an object.
+Then the code declare a
+[variable](../src/com/github/forax/vmboiler/Var.java)
+'x' of type INT which is the parameter of the function.
+It creates a
+[constant]((../src/com/github/forax/vmboiler/Constant.java))
+'1'.
 The code then declare another variable 'result' that will
 contains the result value of the operation '+'.
 Note that the result value is also a MIXED_INT because
