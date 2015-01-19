@@ -37,7 +37,7 @@ import com.github.forax.vmboiler.rt.OptimisticError;
 
 public class Example {
   enum Types implements Type {
-    INT, INT_MIXED
+    INT, INT_MIXED, ANY
     ;
     @Override
     public boolean isMixed() {
@@ -45,7 +45,7 @@ public class Example {
     }
     @Override
     public String vmType() {
-      return Type.VM_INT;
+      return (this == ANY)? Type.VM_OBJECT: Type.VM_INT;
     }
   }
   
@@ -62,7 +62,26 @@ public class Example {
       EXAMPLE_RT, "deopt_ret",
       MethodType.methodType(boolean.class, Object.class, String.class).toMethodDescriptorString());
   
-  private static byte[] generateAdd1() {
+  private static byte[] generateAdd1Any() {
+    ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
+    writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "Foo", null, "java/lang/Object", null);
+    MethodVisitor mv = writer.visitMethod(ACC_PUBLIC|ACC_STATIC, "foo", "(I)Ljava/lang/Object;", null, null);
+    mv.visitCode();
+    CodeGen codeGen = new CodeGen(mv, Types.ANY);
+    Var x = codeGen.createVar(Types.INT);
+    Constant one = new Constant(Types.INT, 1);
+    Var result = codeGen.createVar(Types.ANY);
+    codeGen.call(BSM, EMPTY_ARRAY, DEOPT_ARGS, DEOPT_RET, new Object[] { "x" },
+        result, "add", x, one);
+    codeGen.ret(result);
+    codeGen.end();
+    mv.visitMaxs(-1, -1);
+    mv.visitEnd();
+    writer.visitEnd();
+    return writer.toByteArray();
+  }
+  
+  private static byte[] generateAdd1Int() {
     ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
     writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "Foo", null, "java/lang/Object", null);
     MethodVisitor mv = writer.visitMethod(ACC_PUBLIC|ACC_STATIC, "foo", "(I)I", null, null);
@@ -81,7 +100,7 @@ public class Example {
     return writer.toByteArray();
   }
   
-  private static byte[] generateAdd2() {
+  private static byte[] generateAdd2Int() {
     ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
     writer.visit(V1_8, ACC_PUBLIC|ACC_SUPER, "Foo", null, "java/lang/Object", null);
     MethodVisitor mv = writer.visitMethod(ACC_PUBLIC|ACC_STATIC, "foo", "(I)I", null, null);
@@ -103,7 +122,7 @@ public class Example {
     return writer.toByteArray();
   }
   
-  public static MethodHandle asMethodHandle(Supplier<byte[]> generator) {
+  public static MethodHandle createFunction(Supplier<byte[]> generator, MethodType methodType) {
     byte[] array = generator.get();
     ClassReader reader = new ClassReader(array);
     CheckClassAdapter.verify(reader, true, new PrintWriter(System.out));
@@ -114,17 +133,19 @@ public class Example {
       }
     }.createClass();
     try {
-      return MethodHandles.publicLookup().findStatic(type, "foo", MethodType.methodType(int.class, int.class));
+      return MethodHandles.publicLookup().findStatic(type, "foo", methodType);
     } catch (NoSuchMethodException | IllegalAccessException e) {
       throw new AssertionError(e);
     }
   }
   
   public static void main(String[] args) throws Throwable {
-    MethodHandle mh = asMethodHandle(Example::generateAdd1);
-    //MethodHandle mh = asMethodHandle(Example::generateAdd2);
+    MethodHandle mh = createFunction(Example::generateAdd1Any, MethodType.methodType(Object.class, int.class));
+    //MethodHandle mh = createFunction(Example::generateAdd1Int, MethodType.methodType(int.class, int.class));
+    //MethodHandle mh = createFunction(Example::generateAdd2Int, MethodType.methodType(int.class, int.class));
     try {
-      int value = (int)mh.invokeExact(Integer.MAX_VALUE);
+      int value = (int)mh.invoke(Integer.MAX_VALUE);
+      //int value = (int)mh.invokeExact(Integer.MAX_VALUE);
       System.out.println(value);
     } catch(OptimisticError e) {
       System.out.println(e.value());

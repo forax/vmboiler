@@ -40,13 +40,17 @@ public class ExampleRT {
   
   public static CallSite bsm(Lookup lookup, String name, MethodType methodType) throws Throwable {
     System.out.println("Example.bsm " + lookup + " " + name + methodType);
-    boolean exactMatch = methodType.parameterType(0) == int.class && methodType.parameterType(1) == int.class;
+    boolean exactMatch = 
+        methodType.returnType() == int.class &&
+        methodType.parameterType(0) == int.class &&
+        methodType.parameterType(1) == int.class;
     MethodType lookupType;
-    MethodHandle target = MethodHandles.lookup().findStatic(ExampleRT.class, name, exactMatch?methodType: methodType.generic());
+    MethodHandle target = MethodHandles.lookup()
+        .findStatic(ExampleRT.class, name, exactMatch?methodType: methodType.generic());
     if (!exactMatch) {
       target = MethodHandles.filterReturnValue(target, CONVERT).asType(methodType);
     }
-    return new ConstantCallSite(target.asType(methodType));
+    return new ConstantCallSite(target);
   }
   
   public static boolean deopt_args(Object[] values, String parameterNames) throws Throwable {
