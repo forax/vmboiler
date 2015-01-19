@@ -106,7 +106,7 @@ To solve that, the idea is to consider that the type of result1
 or an object stored into two different local variables
 (on storing an int, one storing an object) with the convention
 that if the object part is a known constant NONE, then the value
-is stored in the int prt, otherwise the value is in the object part.
+is stored in the int part, otherwise the value is in the object part.
 
 So the corresponding Java code is in fact something more like that
 ```java
@@ -214,7 +214,7 @@ Then the code declare a
 [variable](../src/com/github/forax/vmboiler/Var.java)
 'x' of type INT which is the parameter of the function.
 It creates a
-[constant]((../src/com/github/forax/vmboiler/Constant.java))
+[constant](../src/com/github/forax/vmboiler/Constant.java)
 '1'.
 The code then declare another variable 'result' that will
 contains the result value of the operation '+'.
