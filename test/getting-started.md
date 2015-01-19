@@ -57,7 +57,7 @@ of using objects when there is an overflow.
 So instead the equivalent Java code for the generated code should be
 something like this
 
-```
+```java
 static int addOne(int x) {
   try {
     return Math.addExact(x , 1);
@@ -72,8 +72,113 @@ addOne() returns an int so in the general case, there is no boxing,
 and if there is an overflow, we use an exception (named OptimisticError)
 to indicate that the returned value can not be stored in the return type.
 
-The idea of the vmboiler is to just generate the classical code
-and to let the vmboiler code to handle the code that deal with
+Things get a little more complex when trying to call the method addOne,
+let suppose i want a method addTwo defined like this
+
+```ruby
+def addTwo(x)
+  return addOne(addOne(x))
+end
+```
+
+The equivalent Java code is something like that
+
+```java
+static int addTwo(int x) {
+  int result2;
+  try {
+    int result1;
+    try {
+      result1 = addOne(x);
+    } catch(OptimisiticError e) {
+      // e.value() is an Object not an int
+      // how to initialize result1 ?
+    }
+    result2 = addOne(result1);
+  } catch(OptimisiticError e) {
+    // e.value() is an Object not an int
+    // how to initialize result2 ?
+  }
+  return result2;
+}
+```
+
+As you can see we have a problem because the result of the first call
+to addOne() need to be used as argument of the second call to addOne.
+But addOne() can either return an int or return an Object and
+we still want to avoid boxing.
+
+To solve that, the idea is to consider that the type of result1
+(and result2) is a kind of mixed type that can be either an int
+or an object stored into two different local variables
+(on storing an int, one storing an object) with the convention
+that if the object part is a known constant NONE, then the value
+is stored in the int prt, otherwise the value is in the object part.
+
+So the corresponding Java code is in fact something more like that
+```java
+static int addTwo(int x) {
+  Object result2_o
+  int result2_i;
+  try {
+    Object result1_o;
+    int result1_i;
+    try {
+      result1_i = addOne(x);   // take an int
+      result1_o = NONE;
+    } catch(OptimisiticError e) {
+      result1_o = e.value();
+      result1_i = 0;
+    }
+    if (result1_o == NONE) {
+      result2_i = addOne(result1_i);  // take an int
+      result2_o = NONE;
+    } else {
+      result2_o = addOne(result1_o);  // take an object
+      result2_i = 0;
+    }
+  } catch(OptimisiticError e) {
+    result2_o = e.value();
+    result2_i = 0;
+  }
+  if (result2_o == NONE) {
+    return result2_i;
+  }
+  throw OptimisiticError.newOptimisiticError(result2_o);
+}
+```
+
+You may think that this code will never be fast, given
+the size of the bytecode required but you will be wrong because
+this code is highly optimizable because even a simple JIT do
+constant propagation and catch/branch profiling.
+
+So for the JIT, given that for the first catch block will
+be never executed if there is no overflow,
+result1_o will be equal to NONE, so the code of the else branch
+will never be executed so result2_o will be equal to NONE.
+
+The equivalent code in Java to what the JIT will generate is
+```java
+static int addTwo(int x) {
+  int result2_i;
+  try {
+    int result1_i;
+    try {
+      result1_i = addOne(x);   // take an int
+    }
+    result2_i = addOne(result1_i);  // take an int
+  }
+  return result2_i;
+}
+```
+
+which is really close to the code someone will write in Java
+if there is no overflow.
+
+The idea of the vmboiler is to just use the vmboiler API
+to generate the classical code and to let the vmboiler code
+generator to handle the code that deal with
 the exception OptimisticError.
 
 
@@ -89,7 +194,7 @@ isMixed indicated if a compound type composed of a primitive type
 and an object type.
 
 Here is the declaration of the types for our example 
-```
+```java
   enum Types implements Type {
     INT, INT_MIXED, ANY
     ;
@@ -120,7 +225,7 @@ Note that the result value is also a MIXED_INT because
 '+' can overflow. And at the end, the result value is 
 returned as return value of the function.
 
-```
+```java
   private static byte[] generateAdd1Int() {
     ...
     CodeGen codeGen = new CodeGen(mv, Types.INT_MIXED);
@@ -144,7 +249,7 @@ how to find the code of '+' at runtime and 4 regular parameters,
 the result variable (result), the name of the operator (add)
 and the two arguments (x and one). 
 
-```
+```java
   private static byte[] generateAdd1Any() {
     ...
     CodeGen codeGen = new CodeGen(mv, Types.ANY);
@@ -165,7 +270,7 @@ sent to the bootstrap method. For our example, we will not sent any constant
 arguments that why we use an empty array.
 
 The bootstrap method is a classical bootstrap method of invokedynamic
-```
+```java
   public static CallSite bsm(Lookup lookup, String name, MethodType methodType) throws Throwable {
     ...
   }
@@ -181,7 +286,7 @@ the value of the call or the return value.
 The return boolean value indicate if the method must be called for every
 deoptimization (if true) or only once (if false).
 
-```
+```java
   public static boolean deopt_args(Object[] values, String parameterNames) throws Throwable {
     ...
     return false;
@@ -207,7 +312,7 @@ is an int, check at runtime if the return value if a small int or a big int.
 
 In this example, the deoptimisation methods will just print a debug message.
 
-```
+```java
   private static int add(int a, int b) {
     try {
       return Math.addExact(a, b);
