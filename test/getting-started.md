@@ -13,7 +13,7 @@ Intro
 
 Let say i want to implement a function that add 1 to a value,
 By example, if I want to implement it in Ruby, I will write something like this
-```
+```ruby
 def addOne(x)
   return x + 1
 end
@@ -22,7 +22,7 @@ end
 Ruby (like Python) handles overflow by transforming integers that can not be stored
 on 32/64 bits (Fixnum) into an infinite big number (Bignum) automatically.
 
-```
+```ruby
 result = addOne(1)
 puts result.is_a? Fixnum             # true
 
@@ -36,7 +36,7 @@ puts result2.is_a? Fixnum            # false
 Now say that i want to implement Ruby on the JVM,
 the equivalent Java code will be something like this
 
-```
+```java
 static Object addOne(int x) {
   try {
     return Math.addExact(x , 1);
