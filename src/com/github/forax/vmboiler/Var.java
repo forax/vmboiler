@@ -26,7 +26,7 @@ public class Var extends Value {
    * Initialize a variable
    * @param type the type of the variable.
    */
-  protected Var(Type type) {
+  public Var(Type type) {
     super(type);
     this.slot = STACK_ALLOCATED;
   }
