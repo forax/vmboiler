@@ -19,14 +19,25 @@ import static org.objectweb.asm.Opcodes.ICONST_0;
 import static org.objectweb.asm.Opcodes.LCONST_0;
 import static org.objectweb.asm.Opcodes.SIPUSH;
 
+import java.util.function.BiConsumer;
+
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 
 /**
  * A side effect free constant.
  */
 public final class Constant extends Value {
-  private final Object constant;  // may be null
+  private final BiConsumer<MethodVisitor, Type> consumer;
 
+  private Constant(Type type, BiConsumer<MethodVisitor, Type> consumer) {
+    super(type);
+    if (type.isMixed() || type.vmType() == VM_VOID) {
+      throw new IllegalArgumentException("a constant can not have a type VM_VOID or mixed");
+    }
+    this.consumer = consumer;
+  }
+  
   /**
    * Creates a constant with a type and a value.
    * The value must be a type representable as a constant of
@@ -35,33 +46,34 @@ public final class Constant extends Value {
    * @param constant the value of the constant.
    */
   public Constant(Type type, Object constant) {
-    super(type);
-    if (type.isMixed() || type.vmType() == VM_VOID) {
-      throw new IllegalArgumentException("a constant can not have a type VM_VOID or mixed");
-    }
-    this.constant = constant;
+    this(type, (mv, t) -> load(mv, t, constant));
   }
-
+  
   /**
-   * Returns the value of the constant.
-   * @return the value of the constant.
+   * Creates a constant with a type and using invokedynamic
+   * to load the constant.
+   * @param type the type of the constant.
+   * @param bsm the bootstrap method
+   * @param bsmCsts the constant arguments of the bootstrap method
    */
-  public Object constant() {
-    return constant;
+  public Constant(Type type, Handle bsm, Object[] bsmCsts) {
+    this(type, (mv, t) -> {
+      mv.visitInvokeDynamicInsn("const", "()" + t.vmType(), bsm, bsmCsts);
+    });
   }
   
   @Override
   public String toString() {
-    return "constant(" + type() + " " + constant + ')';
+    return "constant(" + type() + ')';
   }
   
   @Override
   void loadPrimitive(MethodVisitor mv) {
-    load(mv, type(), constant);
+    consumer.accept(mv, type());
   }
   @Override
   void loadAll(MethodVisitor mv) {
-    load(mv, type(), constant);
+    consumer.accept(mv, type());
   }
   
   private static void load(MethodVisitor mv, Type type, Object constant) {
