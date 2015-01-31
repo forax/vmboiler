@@ -31,7 +31,7 @@ The idea is to generate more code than the equivalent code in Java but
 in a way that JITs can easily optimized in order to generate an assembly
 code that is really close to the code generated for the equivalent code in Java.
 
-Why the API is register based an not stack based like the Java bytecode ?
+Why the API is register based and not stack based like the Java bytecode ?
 ---
 De-optimization is triggered by throwing an exception (OptimisticError)
 and inside an exception handler, the stack is lost so instead of trying to
