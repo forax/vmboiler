@@ -55,10 +55,11 @@ public final class Constant extends Value {
    * @param type the type of the constant.
    * @param bsm the bootstrap method
    * @param bsmCsts the constant arguments of the bootstrap method
+   * @param name name used by invokedynamic
    */
-  public Constant(Type type, Handle bsm, Object[] bsmCsts) {
+  public Constant(Type type, Handle bsm, Object[] bsmCsts, String name) {
     this(type, (mv, t) -> {
-      mv.visitInvokeDynamicInsn("const", "()" + t.vmType(), bsm, bsmCsts);
+      mv.visitInvokeDynamicInsn(name, "()" + t.vmType(), bsm, bsmCsts);
     });
   }
   
