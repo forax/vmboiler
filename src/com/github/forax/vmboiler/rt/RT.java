@@ -41,7 +41,7 @@ public final class RT {
     int bsmConstantCount = (int)array[2];
     MethodHandle deoptArgs = (MethodHandle)array[3];     // boolean mh(Object[], ...)
     
-    System.out.println("bootstrap: " + name + '(' + mixed + ") with " + bsm + "/" + bsmConstantCount + " " + deoptArgs);
+    //System.out.println("bootstrap: " + name + '(' + mixed + ") with " + bsm + "/" + bsmConstantCount + " " + deoptArgs);
     
     // call the bsm
     Object[] arguments = new Object[3 + bsmConstantCount];
@@ -60,7 +60,7 @@ public final class RT {
       //FIXME check that deoptArgs as the right number of arguments
       //FIXME should we support varargs ?
       
-      System.out.println("deopt cst args " + deoptArgs + " " + Arrays.toString(deoptArgsCsts));
+      //System.out.println("deopt cst args " + deoptArgs + " " + Arrays.toString(deoptArgsCsts));
       
       deoptArgs = MethodHandles.insertArguments(deoptArgs, 1, deoptArgsCsts);
     }
@@ -89,7 +89,7 @@ public final class RT {
    */
   // called by generated code
   public static CallSite bsm_optimistic_failure(Lookup lookup, String name, MethodType methodType, MethodHandle deoptRet, Object... deoptRetCsts) throws Throwable {
-    System.out.println("bsm_optimistic_failure " +  name + " with " + deoptRet + "/" + deoptRetCsts.length);
+    //System.out.println("bsm_optimistic_failure " +  name + " with " + deoptRet + "/" + deoptRetCsts.length);
     
     // do some checks
     //if (!deoptRet.type().equals(MethodType.methodType(boolean.class, Object.class))) {
