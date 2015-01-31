@@ -341,8 +341,9 @@ public final class CodeGen {
    * @param label an ASM label.
    */
   public void jumpIfTrue(Value value, Label label) {
-    if (value.type().vmType() != VM_BOOLEAN) {
-      throw new IllegalArgumentException("value.type must be a boolean");
+    String vmType = value.type().vmType();
+    if (vmType != VM_BOOLEAN && vmType != VM_INT) {
+      throw new IllegalArgumentException("value.type must be an int or a boolean");
     }
     MethodVisitor mv = this.mv;
     value.loadPrimitive(mv);
@@ -355,8 +356,9 @@ public final class CodeGen {
    * @param label an ASM label.
    */
   public void jumpIfFalse(Value value, Label label) {
-    if (value.type().vmType() != VM_BOOLEAN) {
-      throw new IllegalArgumentException("value.type must be a boolean");
+    String vmType = value.type().vmType();
+    if (vmType != VM_BOOLEAN && vmType != VM_INT) {
+      throw new IllegalArgumentException("value.type must be an int or a boolean");
     }
     MethodVisitor mv = this.mv;
     value.loadPrimitive(mv);
