@@ -44,7 +44,7 @@ import com.github.forax.vmboiler.rt.RT;
  * <p>{@link #call(Handle, Object[], Object, Object, Object[], Var, String, Value...)} emit an invokedynamic
  * with the some values as arguments and an variable as register for the return type.
  * The first two arguments are the bootstrap method and the bootstrap arguments,
- * the 3rd and the 4th arguments are some two method handles, the first one will be called
+ * the 3rd and the 4th arguments are two method handles, the first one will be called
  * if at least one argument doesn't match its declared type and the second will be called
  * if the return type doesn't match the result type.
  * <p>{@link #move(Var, Value)} that copy the value into a variable.
