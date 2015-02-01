@@ -279,18 +279,19 @@ i.e. methods that are called if either the arguments of the call or
 the return value of the call doesn't fit in the declared type.
 The fifth argument is an array of constant arguments that will be passed
 to the two methods like the constant arguments of a bootstrap method.
-A deoptimization method will be called with as first arguments either
-the value of the call or the return value.
+A deoptimization method will be called with as first arguments
+the lookup object, the name and the method type of the deoptimized method
+followed either by the arguments of the call or the return value.
 The return boolean value indicate if the method must be called for every
 deoptimization (if true) or only once (if false).
 
 ```java
-  public static boolean deopt_args(Object[] values, String parameterNames) throws Throwable {
+  public static boolean deopt_args(Lookup lookup, String name, MethodType methodType, Object[] values, String parameterNames) throws Throwable {
     ...
     return false;
   }
   
-  public static boolean deopt_ret(Object value, String parameterNames) throws Throwable {
+  public static boolean deopt_ret(Lookup lookup, String name, MethodType methodType, Object value, String parameterNames) throws Throwable {
     ...
     return false;
   }
