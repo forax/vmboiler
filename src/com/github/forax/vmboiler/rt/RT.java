@@ -39,7 +39,7 @@ public final class RT {
     String mixed = (String)array[0];
     MethodHandle bsm = (MethodHandle)array[1];
     int bsmConstantCount = (int)array[2];
-    MethodHandle deoptArgs = (MethodHandle)array[3];     // boolean mh(Object[], ...)
+    MethodHandle deoptArgs = (MethodHandle)array[3];     // boolean mh(Lookup, Object[], ...)
     
     //System.out.println("bootstrap: " + name + '(' + mixed + ") with " + bsm + "/" + bsmConstantCount + " " + deoptArgs);
     
@@ -52,6 +52,9 @@ public final class RT {
       System.arraycopy(array, 4, arguments, 3, bsmConstantCount);
     }
     CallSite callSite = (CallSite)bsm.invokeWithArguments(arguments);
+    
+    // prepend lookup/name/methodType
+    deoptArgs = MethodHandles.insertArguments(deoptArgs, 0, lookup, name, methodType);
     
     // bundle deoptArgs constant arguments with deoptArgs if necessary
     if (array.length != 4 + bsmConstantCount) {
@@ -95,6 +98,9 @@ public final class RT {
     //if (!deoptRet.type().equals(MethodType.methodType(boolean.class, Object.class))) {
     //  throw new WrongMethodTypeException("invalid deop callback signature ! " + deoptRet.type());
     //}
+    
+    // prepend lookup/name/methodType
+    deoptRet = MethodHandles.insertArguments(deoptRet, 0, lookup, name, methodType);
     
     // bundle deoptRet constant arguments with deoptRet if necessary
     if (deoptRetCsts.length != 0) {

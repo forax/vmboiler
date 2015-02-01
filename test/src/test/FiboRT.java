@@ -33,12 +33,12 @@ public class FiboRT {
     return new ConstantCallSite(target);
   }
   
-  public static boolean deopt_args(Object[] values) throws Throwable {
+  public static boolean deopt_args(Lookup lookup, String name, MethodType methodType, Object[] values) throws Throwable {
     System.out.println("deopt args " + Arrays.toString(values));
     return false;
   }
   
-  public static boolean deopt_return(Object value) throws Throwable {
+  public static boolean deopt_return(Lookup lookup, String name, MethodType methodType, Object value) throws Throwable {
     System.out.println("deopt return " + value);
     return false;
   }

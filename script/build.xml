@@ -30,7 +30,7 @@
 	</ebnf>
   </target>
 	
-  <target name="all" depends="jar">
+  <target name="all" depends="gen, jar">
   </target>
 	
 	<target name="jar" depends="compile">

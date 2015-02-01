@@ -53,13 +53,13 @@ public class ExampleRT {
     return new ConstantCallSite(target);
   }
   
-  public static boolean deopt_args(Object[] values, String parameterNames) throws Throwable {
-    System.out.println("deopt args " + parameterNames + " " + Arrays.toString(values));
+  public static boolean deopt_args(Lookup lookup, String name, MethodType methodType, Object[] values, String parameterNames) throws Throwable {
+    System.out.println("deopt args " + lookup + " " + parameterNames + " " + Arrays.toString(values));
     return false;
   }
   
-  public static boolean deopt_ret(Object value, String parameterNames) throws Throwable {
-    System.out.println("deopt return " + value);
+  public static boolean deopt_ret(Lookup lookup, String name, MethodType methodType, Object value, String parameterNames) throws Throwable {
+    System.out.println("deopt return " + lookup + " " + value);
     return false;
   }
   

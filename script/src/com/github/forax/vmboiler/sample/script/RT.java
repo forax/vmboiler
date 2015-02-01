@@ -19,7 +19,7 @@ public class RT {
   }
   
   @SuppressWarnings("unused") // used by a method handle
-  private static boolean deopt_args(Linker linker, String nameAndType, Binding[] bindings, Object[] values) {
+  private static boolean deopt_args(Linker linker, String nameAndType, Binding[] bindings, Lookup lookup, String name, MethodType methodType, Object[] values) {
     //System.out.println("deopt args " + Arrays.toString(values) + " " + Arrays.toString(bindings));
     
     boolean invalidation = false;
@@ -42,7 +42,7 @@ public class RT {
   }
   
   @SuppressWarnings("unused") // used by a method handle
-  private static boolean deopt_return(Linker linker, String nameAndType, Binding binding, Object value) {
+  private static boolean deopt_return(Linker linker, String nameAndType, Binding binding, Lookup lookup, String name, MethodType methodType, Object value) {
     System.out.println("deopt return " + value + " " + binding);
     if (binding != null) {
       binding.type(Type.merge(Type.getTypeFromValue(value), binding.type()));
@@ -66,9 +66,9 @@ public class RT {
       IS_INSTANCE = MethodHandles.publicLookup().findVirtual(Class.class, "isInstance",
           MethodType.methodType(boolean.class, Object.class));
       DEOPT_ARGS = lookup.findStatic(RT.class, "deopt_args",
-          MethodType.methodType(boolean.class, Linker.class, String.class, Binding[].class, Object[].class));
+          MethodType.methodType(boolean.class, Linker.class, String.class, Binding[].class, Lookup.class, String.class, MethodType.class, Object[].class));
       DEOPT_RETURN = lookup.findStatic(RT.class, "deopt_return",
-          MethodType.methodType(boolean.class, Linker.class, String.class, Binding.class, Object.class));
+          MethodType.methodType(boolean.class, Linker.class, String.class, Binding.class, Lookup.class, String.class, MethodType.class, Object.class));
     } catch (NoSuchMethodException | IllegalAccessException e) {
       throw new AssertionError(e);
     }

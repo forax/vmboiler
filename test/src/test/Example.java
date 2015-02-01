@@ -57,10 +57,10 @@ public class Example {
       MethodType.methodType(CallSite.class, Lookup.class, String.class, MethodType.class).toMethodDescriptorString());
   private static final Handle DEOPT_ARGS = new Handle(H_INVOKESTATIC,
       EXAMPLE_RT, "deopt_args",
-      MethodType.methodType(boolean.class, Object[].class, String.class).toMethodDescriptorString());
+      MethodType.methodType(boolean.class, Lookup.class, String.class, MethodType.class, Object[].class, String.class).toMethodDescriptorString());
   private static final Handle DEOPT_RET = new Handle(H_INVOKESTATIC,
       EXAMPLE_RT, "deopt_ret",
-      MethodType.methodType(boolean.class, Object.class, String.class).toMethodDescriptorString());
+      MethodType.methodType(boolean.class, Lookup.class, String.class, MethodType.class, Object.class, String.class).toMethodDescriptorString());
   
   private static byte[] generateAdd1Any() {
     ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
@@ -140,9 +140,9 @@ public class Example {
   }
   
   public static void main(String[] args) throws Throwable {
-    MethodHandle mh = createFunction(Example::generateAdd1Any, MethodType.methodType(Object.class, int.class));
+    //MethodHandle mh = createFunction(Example::generateAdd1Any, MethodType.methodType(Object.class, int.class));
     //MethodHandle mh = createFunction(Example::generateAdd1Int, MethodType.methodType(int.class, int.class));
-    //MethodHandle mh = createFunction(Example::generateAdd2Int, MethodType.methodType(int.class, int.class));
+    MethodHandle mh = createFunction(Example::generateAdd2Int, MethodType.methodType(int.class, int.class));
     try {
       int value = (int)mh.invoke(Integer.MAX_VALUE);
       //int value = (int)mh.invokeExact(Integer.MAX_VALUE);

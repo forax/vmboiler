@@ -54,10 +54,10 @@ public class FiboGen {
       MethodType.methodType(CallSite.class, Lookup.class, String.class, MethodType.class).toMethodDescriptorString());
   private static final Handle DEOPT_ARGS = new Handle(H_INVOKESTATIC,
       FIBO_RT, "deopt_args",
-      MethodType.methodType(boolean.class, Object[].class).toMethodDescriptorString());
+      MethodType.methodType(boolean.class, Lookup.class, String.class, MethodType.class, Object[].class).toMethodDescriptorString());
   private static final Handle DEOPT_RET = new Handle(H_INVOKESTATIC,
       FIBO_RT, "deopt_return",
-      MethodType.methodType(boolean.class, Object.class).toMethodDescriptorString());
+      MethodType.methodType(boolean.class, Lookup.class, String.class, MethodType.class, Object.class).toMethodDescriptorString());
   
   
   public static void main(String[] args) throws IOException {

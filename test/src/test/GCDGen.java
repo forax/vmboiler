@@ -40,16 +40,16 @@ public class GCDGen {
   
   private static final Object[] EMPTY_ARRAY = new Object[0];
   
-  private static final String GCD_RT = RT.class.getName().replace('.', '/');
+  private static final String GCD_RT = GCDRT.class.getName().replace('.', '/');
   private static final Handle BSM = new Handle(H_INVOKESTATIC,
       GCD_RT, "bsm",
       MethodType.methodType(CallSite.class, Lookup.class, String.class, MethodType.class).toMethodDescriptorString());
   private static final Handle DEOPT_ARGS = new Handle(H_INVOKESTATIC,
       GCD_RT, "deopt_args",
-      MethodType.methodType(boolean.class, Object[].class).toMethodDescriptorString());
+      MethodType.methodType(boolean.class, Lookup.class, String.class, MethodType.class, Object[].class).toMethodDescriptorString());
   private static final Handle DEOPT_RET = new Handle(H_INVOKESTATIC,
       GCD_RT, "deopt_ret",
-      MethodType.methodType(boolean.class, Object.class).toMethodDescriptorString());
+      MethodType.methodType(boolean.class, Lookup.class, String.class, MethodType.class, Object.class).toMethodDescriptorString());
   
   
   public static void main(String[] args) throws IOException {

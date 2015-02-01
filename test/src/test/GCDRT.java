@@ -9,7 +9,7 @@ import java.lang.invoke.MethodType;
 import java.util.Arrays;
 
 @SuppressWarnings("unused")
-public class RT {
+public class GCDRT {
   private static int sub(int a, int b) {
     return a - b;
   }
@@ -22,16 +22,16 @@ public class RT {
   
   public static CallSite bsm(Lookup lookup, String name, MethodType methodType) throws Throwable {
     System.out.println("GCDRT.bsm " + lookup + " " + name + methodType);
-    MethodHandle target = MethodHandles.lookup().findStatic(RT.class, name, methodType);
+    MethodHandle target = MethodHandles.lookup().findStatic(GCDRT.class, name, methodType);
     return new ConstantCallSite(target);
   }
   
-  public static boolean deopt_args(Object[] values) throws Throwable {
+  public static boolean deopt_args(Lookup lookup, String name, MethodType methodType, Object[] values) throws Throwable {
     System.out.println("deopt args " + Arrays.toString(values));
     return false;
   }
   
-  public static boolean deopt_ret(Object value) throws Throwable {
+  public static boolean deopt_ret(Lookup lookup, String name, MethodType methodType, Object value) throws Throwable {
     System.out.println("deopt return " + value);
     return false;
   }
