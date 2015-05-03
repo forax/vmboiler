@@ -77,6 +77,16 @@ public final class CodeGen {
   }
   
   /**
+   * Returns the underlying ASM MethodVisitor.
+   * This method should be used rarely because the modification
+   * of method visitor state will not be tracked by the current CodeGen.
+   * @return the underlying ASM MethodVisitor.
+   */
+  public MethodVisitor methodVisitor() {
+    return mv;
+  }
+  
+  /**
    * Returns type of the current method.
    * @return type of the current method.
    */
