@@ -7,6 +7,7 @@ import static com.github.forax.vmboiler.Type.VM_DOUBLE;
 import static com.github.forax.vmboiler.Type.VM_FLOAT;
 import static com.github.forax.vmboiler.Type.VM_INT;
 import static com.github.forax.vmboiler.Type.VM_LONG;
+import static com.github.forax.vmboiler.Type.VM_OBJECT;
 import static com.github.forax.vmboiler.Type.VM_SHORT;
 import static com.github.forax.vmboiler.Type.VM_VOID;
 import static com.github.forax.vmboiler.Value.loadOpcode;
@@ -40,7 +41,7 @@ import com.github.forax.vmboiler.rt.RT;
  * and should never be used with another {@link CodeGen}.
  * 
  * <p>Operations
- * <p>There are only 8 operations (instructions) to define the semantics of your language,
+ * <p>There are only 9 operations (instructions) to define the semantics of your language,
  * <p>{@link #call(Handle, Object[], Object, Object, Object[], Var, String, Value...)} emit an invokedynamic
  * with the some values as arguments and an variable as register for the return type.
  * The first two arguments are the bootstrap method and the bootstrap arguments,
@@ -49,6 +50,7 @@ import com.github.forax.vmboiler.rt.RT;
  * if the return type doesn't match the result type.
  * <p>{@link #move(Var, Value)} that copy the value into a variable.
  * <p>{@link #ret(Value)} that returns from the current function with the value. 
+ * <p>{@link #throwIt(Value)} that throw a value and terminate the function execution. 
  * <p>{@link #label(Label)} that set a label that can be use as a target of a jump.
  * <p>{@link #jump(Label)} that jump unconditionally to the specified label.
  * <p>{@link #jumpIfTrue(Value, Label)} that jump if the value is true.  
@@ -153,9 +155,7 @@ public final class CodeGen {
   }
   
   /**
-   * Call a 'virtual method' using invokedynamic. Call {@code deoptArgsCallback} if
-   * of one the argument value is declared with a mixed type and the primitive part
-   * can not store the value of the register.
+   * Call a 'virtual method' using invokedynamic.
    * 
    * @param bsm the bootstrap method used to resolved the call.
    * @param bsmCsts the bootstrap constant arguments passed to the bootstrap method.
@@ -377,6 +377,18 @@ public final class CodeGen {
   
   //public void jumpIfNull(Value value, Label label);
   //public void jumpIfNonNull(Value value, Label label);
+  
+  /**
+   * Throw a value.
+   * @param value the value to throw.
+   */
+  public void throwIt(Value value) {
+    if (value.type().vmType().charAt(0) == 'L') {
+      throw new IllegalArgumentException("value.type must be a subtype of object");
+    }
+    value.loadPrimitive(mv);
+    mv.visitInsn(ATHROW);
+  }
   
   /**
    * Generate a line number for the next instruction.
